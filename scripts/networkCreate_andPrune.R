@@ -23,16 +23,28 @@ attribute_allPoints <- attribute_allPoints %>% mutate(ACQ_DATE = as.POSIXct(ACQ_
 # form a time lookup tbl
 acqTime_lookup <- attribute_allPoints %>% select(1, ACT_TIME) %>% rename_at(1, ~"OID")
 # renaming columns of the nearTable_allPoints
-t_nearTable_allPoints <- acqTime_lookup %>% rename_at(1, ~paste0(names(nearTable_allPoints)[2])) %>% right_join(nearTable_allPoints) %>% rename(IN_TIME = ACT_TIME)
-t_nearTable_allPoints <- acqTime_lookup %>% rename_at(1, ~paste0(names(nearTable_allPoints)[3])) %>% right_join(t_nearTable_allPoints) %>% rename(NEAR_TIME = ACT_TIME)
+nearTable_allPoints <- acqTime_lookup %>% rename_at(1, ~paste0(names(nearTable_allPoints)[2])) %>% right_join(nearTable_allPoints) %>% rename(IN_TIME = ACT_TIME)
+nearTable_allPoints <- acqTime_lookup %>% rename_at(1, ~paste0(names(nearTable_allPoints)[3])) %>% right_join(nearTable_allPoints) %>% rename(NEAR_TIME = ACT_TIME)
 
 # calculate time difference. Convention: time difference = NEAR_TIME - IN_TIME. Thus, a positive time difference occurs when NEAR_ is later than IN_
-t_nearTable_allPoints <- t_nearTable_allPoints %>% mutate(inNear_tDiff = NEAR_TIME - IN_TIME)
+nearTable_allPoints <- nearTable_allPoints %>% mutate(inNear_tDiff = NEAR_TIME - IN_TIME)
 # filter out edges with negative time differences
-t_nearTable_allPoints <- t_nearTable_allPoints %>% filter(inNear_tDiff > as.difftime(0, units = "hours"))
+nearTable_allPoints <- nearTable_allPoints %>% filter(inNear_tDiff > as.difftime(0, units = "hours"))
 # filter out edges with time differences beyond 1 week
-t_nearTable_allPoints <- t_nearTable_allPoints %>% filter(inNear_tDiff < as.difftime(1, units = "weeks"))
+nearTable_allPoints <- nearTable_allPoints %>% filter(inNear_tDiff < as.difftime(1, units = "weeks"))
 
 # PROCESSING====
 # Generate graph
-fireGraph = graph_from_data_frame(t_nearTable_allPoints[, c("IN_FID", "NEAR_FID")], directed = TRUE)
+fireGraph = graph_from_data_frame(nearTable_allPoints[, c("IN_FID", "NEAR_FID")], directed = TRUE)
+
+# Decompose the graph collection while removing isolate vertices
+fireGraph_decompose <- fireGraph %>% decompose(min.vertices = 3) # 2 is sufficient to remove isolates, but produce too many small graphs
+verticesCounts <- sapply(fireGraph_decompose, vcount)# can also use function(grph) V(grph) %>% length())
+
+# identify the potential ignitial points per graph
+ignitialPoints <- fireGraph_decompose %>% sapply(function(grph) V(grph)[degree(grph, v = V(grph), mode = "in") == 0])
+ignitialPoints_FID <- ignitialPoints %>% unlist() %>% names() %>% as.numeric() %>% unique()
+
+# test the accuracy of the identified ignitial FIDs by testing if there are any rows with the ignitial FID as the NEAR_ instead of the IN_
+# if correct, then there should not be.
+check_nearTable <- nearTable_allPoints %>% filter(NEAR_FID %in% ignitialPoints_FID)
