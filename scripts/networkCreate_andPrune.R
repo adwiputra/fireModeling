@@ -66,6 +66,7 @@ if(!identical(length(ignitialPoints_FID) + length(spreadPoints_FID), (ignitialPo
   # assign labels: "ignitial" and "spread" to the respective points in attribute_allPoints
   attribute_allPoints <- attribute_allPoints %>% rename_at(1, ~"pointID") %>% mutate(pointCategory = case_when(pointID %in% ignitialPoints_FID ~ "ignitial",
                                                                                                                pointID %in% spreadPoints_FID ~ "spread",
+
                                                                                                                TRUE ~ NA)) %>% mutate(pointCategory = as.factor(pointCategory))
   # check if all coordinates are exclusive
   outPointTable <- attribute_allPoints %>% filter(!is.na(pointCategory))
