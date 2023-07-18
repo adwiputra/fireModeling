@@ -34,3 +34,6 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 largeData_loaded.RData
+# data folder
+data_etc/
+data/
