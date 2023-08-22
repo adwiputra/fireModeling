@@ -35,7 +35,7 @@ trainIgnitials <- occurrenceData %>% setdiff(testIgnitials)
 
 # 3. PROCESSING========
 # Calibration
-ignitial_maxentModel <- ENMevaluate(occs = trainIgnitials, bg = backgroundData, algorithm = "maxent.jar", partitions = "testing", occs.testing = testIgnitials, parallel = TRUE, numCores = 52, categoricals = c("peat", "ecoreg", "lcDom"), tune.args = list(fc = c("L","LQ","LQH","H"), rm = c(0.7, 0.8, 1:5)))
+ignitial_maxentModel <- ENMevaluate(occs = trainIgnitials, bg = backgroundData, algorithm = "maxnet", partitions = "testing", occs.testing = testIgnitials, categoricals = c("peat", "ecoreg", "lcDom"), tune.args = list(fc = c("L","LQ"), rm = c(0.7, 0.8, 1:5))) # parallel = TRUE, numCores = 52, fc = c("LQH","H")
 # Validation
 # Best model selection
 # 4. POST-PROCESSING======
