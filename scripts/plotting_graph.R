@@ -1,7 +1,54 @@
 # Plotting graph
-library(ggplot2)
+library(igraph)
+library(tidyverse)
 library(ggnetwork) # is necessary otherwise won't plot
+library(GGally)
+library(intergraph)
 # command to plot the graph # all graph, so will be a bit too long to finish
-ggplot(fireGraph, aes(x = x, y = y, xend = xend, yend = yend)) + 
-  geom_edges() +
-  geom_nodes()
+ggplot(fireGraph_decompose[[4367]], aes(x = x, y = y, xend = xend, yend = yend)) + theme_blank() +
+  geom_edges(arrow = arrow(length = unit(0.5, "lines"), type = "closed"), ) + 
+  geom_nodes(colour = "steelblue") + theme(axis.line = element_blank(), axis.title = element_blank(), axis.text = element_blank())
+
+
+#  diagnostic plots
+# function to find the Mode
+Mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]
+}
+Mode(verticesCounts)
+
+
+# make bar plot for the different number of 
+verticesNumber <- read.csv("D:/Documents/otherOpps/YSSP/projects/analysis/annualStats_ignitials.csv") %>% pivot_longer(!year, names_to = "variables", values_to = "count")
+verticesNumber <- verticesNumber %>% mutate(variables = as.factor(variables)) %>% mutate(variables = case_when(variables == "allPoints_n" ~ "Total fire points",
+                                                                                                               variables == "ignitial_n" ~ "Initial points",
+                                                                                                               TRUE ~ variables))
+
+par(mfrow = c(1, 2))
+ggplot(verticesNumber %>% filter(variables != "pct_ignitial"), aes(x = variables, y = count, fill = as.character(year))) + geom_col(position = "dodge") + theme_classic() + theme(legend.title=element_text("Year")) + scale_fill_brewer(name = "year")
+ggplot(verticesNumber %>% filter(variables == "pct_ignitial"), aes(x = "Initial proportion", y = count, fill = as.character(year))) + geom_col(position = "dodge") + theme_classic() + theme(legend.title=element_blank())
+library(ggplot2)
+# Basic density
+df <- data.frame(vCount = verticesCounts)
+p <- ggplot(df, aes(x=vCount)) + 
+  geom_density() + theme_classic() + xlim(0, 100) + xlab("Vertice counts") + theme(axis.title = element_text(size = 16), axis.text = element_text(size = 13))
+# p
+# Add mean line
+p+ geom_vline(aes(xintercept=mean(vCount)),
+              color="blue", linetype="dashed", linewidth=1)
+# Replaced by density curve
+# boxplot(verticesCounts, subset = verticesCounts < 800)
+# verticesCounts[verticesCounts < 100] %>% boxplot()
+
+
+# playing around
+testGraph <- fireGraph_decompose[[1]]
+btw <- degree(testGraph, mode = "in")
+# want to display: the origin, the most in and out
+btw_dum <- (btw - (btw-1))*3
+btw_dum[btw == 0] <- 14
+plot(testGraph, vertex.size = btw_dum, vertex.label = NA, edge.arrow.size = 0.2, edge.color = "gray", vertex.color = "steelblue", layout = layout_with_lgl)
+
+
+
