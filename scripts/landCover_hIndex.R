@@ -65,4 +65,14 @@ majorityClass_GRIDs <- majorityClass_GRIDs %>% filter(!GRID_ID %in% reconciled_t
 # Not joining with the relevant vector layer here because the file size is too big. the Vector is to be "Lookup" in ArcGIS to generate rasters of majority land cover (categorical) and the H index (continuous)
 outputTable <- majorityClass_GRIDs %>% left_join(shannon_GRIDs)
 # export
-outputTable %>% write.csv(paste0(outputDir, "hIndex_majority_perGrid_v2.csv"))
+outputTable %>% write.csv(paste0(outputDir, "hIndex_majority_perGrid_v2.csv"), row.names = FALSE)
+
+# Join the outputTable to the vector file========
+dataDir <- "D:/Documents/otherOpps/YSSP/projects/analysis/data/spatial/covariates/landCover_CCI/"
+outputDir <- paste0(dataDir, "preprocessing/")
+outputTable <- read.csv(paste0(outputDir, "hIndex_majority_perGrid_v2.csv"))
+# Writing the output vector file
+gridVector <- st_read("D:/Documents/otherOpps/YSSP/projects/analysis/mapping/fireAnalysis/temp/temp_pairWise_refinedExtent.shp") %>% left_join(outputTable)
+gridVector_landOnly <- gridVector %>% filter(!is.na(gridcode) & !is.na(classProp))
+st_write(gridVector_landOnly, "D:/Documents/otherOpps/YSSP/projects/analysis/mapping/fireAnalysis/temp/landOnlyGrids_refined_v2_r.shp", driver = "ESRI Shapefile", append = FALSE)
+
