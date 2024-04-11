@@ -19,10 +19,10 @@ cl = makeCluster(cores, output = "")
 registerDoParallel(cl)
 
 # 1. INPUTS=====
-coordsLookup <- "data/table/allMerge_fireJan14dec16.csv" %>% fread()
+coordsLookup <- "D:/Documents/otherOpps/YSSP/projects/analysis/data/tables/allMerge_fireJan14dec16.csv" %>% fread()
 oidName <- c("OID_")
 coordsLookup <- coordsLookup %>% rename_at(1, ~oidName)
-majorNearTable <- "data/table/nearTable_allMerge_fireJan14dec16.csv" %>% fread()
+majorNearTable <- "D:/Documents/otherOpps/YSSP/projects/analysis/data/tables/nearTable_allMerge_fireJan14dec16.csv" %>% fread()
 
 nearTable_headerNames <- majorNearTable %>% names()
 
