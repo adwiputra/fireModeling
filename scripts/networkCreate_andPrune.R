@@ -19,7 +19,7 @@ attribute_allPoints <- values(attribute_allPoints)
 # attribute_allPoints <- read.csv(paste0(dataDir, "allMerge_fireJan14dec16.csv"))
 
 # 2. OUTPUT PARAMETERIZATION====
-outputPointTable_name <- paste0(dataDir, "pointAttributes_all.csv")
+outputPointTable_name <- paste0(dataDir, "pointAttributes_filtered_A.csv")
 
 # PRPROCESSING=========
 # time info preprocessing
@@ -77,6 +77,7 @@ if(!identical(length(ignitialPoints_FID) + length(spreadPoints_FID), (ignitialPo
                                                                                                                pointID %in% spreadPoints_FID ~ "spread",
 
                                                                                                                TRUE ~ NA)) %>% mutate(pointCategory = as.factor(pointCategory))
+  # attribute_allPoints %>% write_rds(paste0(dataDir, "pointAttributes_all.rds")) # ADrun # Export
   # check if all coordinates are exclusive
   outPointTable <- attribute_allPoints %>% filter(!is.na(pointCategory))
   if(identical(nrow(outPointTable), nrow(unique(outPointTable[, c("LONGITUDE", "LATITUDE")])))) {
@@ -100,3 +101,6 @@ if(!identical(length(ignitialPoints_FID) + length(spreadPoints_FID), (ignitialPo
     }
   }
 }
+
+# Saving the intermediary outputs
+save.image("D:/Documents/research/projects/nus07_fire/analysis/finalized_materials/partA_rawGraph_2025.RData")
