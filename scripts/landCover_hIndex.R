@@ -2,8 +2,10 @@
 # AD
 # first created: 05/07/2023
 # revised: 18/10/2023
+# revised in accordance to finalization phase in 2025: 17/01/2025
 
 # 0. libraries======
+library(data.table)
 library(tidyverse)
 library(sf)
 
@@ -14,10 +16,11 @@ landCover_lookup <- paste0(dataDir, "LC_class_lookUp.csv") %>% read.csv()
 landCover_lookup <- landCover_lookup %>% mutate(landClass = paste0(landCover_lookup[, 2], " ", landCover_lookup[, 3], " ", landCover_lookup[, 4])) %>% mutate(landClass = gsub("^\\s+|\\s+$", "", landClass))
 landCover_lookup <- landCover_lookup %>% select(Value, landClass)
 
-outputDir <- paste0(dataDir, "preprocessing/")
+# outputDir <- paste0(dataDir, "preprocessing/")
+outputDir <- "D:/Documents/research/projects/nus07_fire/analysis/finalized_materials/"
 
-gridded_table <- paste0(outputDir, "gridID_lc14_intersect.csv") %>% read.csv()
-
+# gridded_table <- paste0(outputDir, "gridID_lc14_intersect.csv") %>% read.csv()
+gridded_table <- paste0(outputDir, "lc2014_union_tesselationGRID.csv") %>% fread()
 
 # 2. Processing====
 # Summarize by grid ID and test if the total area is equal to the supposed area (1 sq. km)
@@ -65,14 +68,23 @@ majorityClass_GRIDs <- majorityClass_GRIDs %>% filter(!GRID_ID %in% reconciled_t
 # Not joining with the relevant vector layer here because the file size is too big. the Vector is to be "Lookup" in ArcGIS to generate rasters of majority land cover (categorical) and the H index (continuous)
 outputTable <- majorityClass_GRIDs %>% left_join(shannon_GRIDs)
 # export
-outputTable %>% write.csv(paste0(outputDir, "hIndex_majority_perGrid_v2.csv"), row.names = FALSE)
+outputTable %>% fwrite(paste0(outputDir, "hIndex_majority_perGrid_v2.csv"), row.names = FALSE)
 
 # Join the outputTable to the vector file========
-dataDir <- "D:/Documents/otherOpps/YSSP/projects/analysis/data/spatial/covariates/landCover_CCI/"
-outputDir <- paste0(dataDir, "preprocessing/")
-outputTable <- read.csv(paste0(outputDir, "hIndex_majority_perGrid_v2.csv"))
+# dataDir <- "D:/Documents/otherOpps/YSSP/projects/analysis/data/spatial/covariates/landCover_CCI/"
+# outputDir <- paste0(dataDir, "preprocessing/")
+# outputTable <- read.csv(paste0(outputDir, "hIndex_majority_perGrid_v2.csv"))
 # Writing the output vector file
-gridVector <- st_read("D:/Documents/otherOpps/YSSP/projects/analysis/mapping/fireAnalysis/temp/temp_pairWise_refinedExtent.shp") %>% left_join(outputTable)
+# gridVector <- st_read("D:/Documents/otherOpps/YSSP/projects/analysis/mapping/fireAnalysis/temp/temp_pairWise_refinedExtent.shp") %>% left_join(outputTable)
+gridVector <- read_sf(paste0(outputDir, "tessGRID_2025.shp")) %>% left_join(outputTable)
 gridVector_landOnly <- gridVector %>% filter(!is.na(gridcode) & !is.na(classProp))
-st_write(gridVector_landOnly, "D:/Documents/otherOpps/YSSP/projects/analysis/mapping/fireAnalysis/temp/landOnlyGrids_refined_v2_r.shp", driver = "ESRI Shapefile", append = FALSE)
-
+# st_write(gridVector_landOnly, "D:/Documents/otherOpps/YSSP/projects/analysis/mapping/fireAnalysis/temp/landOnlyGrids_refined_v2_r.shp", driver = "ESRI Shapefile", append = FALSE)
+st_write(gridVector_landOnly, paste0(outputDir, "landOnlyGrids_refined_v2_r.shp"), driver = "ESRI Shapefile", append = FALSE)
+# Rasterize
+library(terra)
+# convert from sf into spatVector
+gridVector_landOnly <- paste0(outputDir, "landOnlyGrids_refined_v2_r.shp") %>% vect()
+# generate blanko raster
+blankoRaster <- rast(ext(gridVector_landOnly), resolution = 1000)
+dominantLand_raster <- gridVector_landOnly %>% terra::rasterize(y= blankoRaster, field = "gridcode", filename= paste0(outputDir, "dominantLand.tif"))
+landCoverDiversity_raster <- gridVector_landOnly %>% rasterize(y= blankoRaster, field = "H", filename= paste0(outputDir, "landDiversity.tif"))
