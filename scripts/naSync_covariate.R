@@ -7,7 +7,7 @@ library(tidyverse)
 
 # 1. INPUTS======
 # a. Ecoregion
-a_path <- "D:/AD/fire_analysis/temp_transfer/covariates/ecoregID_raster.tif"
+a_path <- "D:/AD/fire_analysis/temp_transfer/covariates/reduced_ecoregion_raster.tif"
 # b. VPD
 b_path <- "D:/AD/fire_analysis/temp_transfer/covariates/mean80_2014_vpd_chelsa2.tif" # already in World Mercator coordinate reference system
 # c. travelTime
@@ -25,7 +25,7 @@ h_path <- "D:/AD/fire_analysis/temp_transfer/covariates/dominantLand.tif"
 # i. EXTRA gridID_raster_exclusive
 i_path <- "D:/AD/fire_analysis/temp_transfer/gridID_raster_exclusive.tif"
 # Output directory
-output_dir <- "F:/temp_transfer/na_synced_covariates/"
+output_dir <- "F:/temp_transfer/na_synced_covariates_v2/"
 if(!dir.exists(output_dir))dir.create(output_dir)
 # preprocessing====
 # Generate the minimum extent of raster to crop all inputs with
