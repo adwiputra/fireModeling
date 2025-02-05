@@ -7,17 +7,20 @@ library(doParallel)
 library(terra)
 library(biomod2)
 
+# Documenting time start
+t_start <- Sys.time()
 # INPUTS======
 # mainDir <- "D:/AD/fire_analysis/biomodRun_ebro/"
-mainDir <- "D:/Documents/research/projects/nus07_fire/analysis/finalized_materials/"
+setwd("/hpctmp")
+mainDir <- "/home/svu/e0915700/inputs/"
 firePoints <- paste0(mainDir, "ignitionSpread_machLearn_input.shp") %>% vect()
 absencePoints_dir <- paste0(mainDir, "basSampled_absences/")
 absencePoints <- paste0(absencePoints_dir, "bas_sample1.shp") %>% vect()
 predictorDir <- paste0(mainDir, "na_synced_covariates_v2/")
-coreNumber <- detectCores() - 19
+coreNumber <- detectCores() - 8 # original 19
 # the ignition to total input ratio
 ignitionContent <- c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9) # 1 has been run a priori 
-N_input <- 75424
+N_input <- 75424 # fixed
 # total replicates of monte carlo simulation
 n_replications <- 100
 # seed_r <- sample(1:1000, n_replications) # the seed number for each monte carlo simulation # Below is the sample obtained after running this line
@@ -36,7 +39,7 @@ myExpl[[2]] <- terra::as.factor(myExpl[[2]])
 # Registering do parallel backend
 registerDoParallel(cores = coreNumber) # cores = 10 crashed the whole computer
 # LOOP PER ignitionContent
-for(c in 1:length(ignitionContent)){
+for(c in 2:length(ignitionContent)){#ADcheck
   # LOOP PER MONTE CARLO SIMULATION
   for(r in 1:n_replications){
     # setting seed to maintain reproducibility
@@ -107,7 +110,7 @@ for(c in 1:length(ignitionContent)){
                                           modeling.id = paste0('sensitivity_', c, '_abs_', i, '_sim_', r),
                                           models = c('RFd'),
                                           CV.strategy = 'random',
-                                          CV.nb.rep = 10,
+                                          CV.nb.rep = 10, # set to 10 in non-monte carlo runs
                                           CV.perc = 0.7,
                                           OPT.strategy = 'bigboss',
                                           metric.eval = c('TSS', 'ROC'),
@@ -121,7 +124,7 @@ for(c in 1:length(ignitionContent)){
       
       # plotting response curves
       mods <- get_built_models(myBiomodModelOut, run = 'allRun')
-      bm_PlotResponseCurves(bm.out = myBiomodModelOut, 
+      respCurves <- bm_PlotResponseCurves(bm.out = myBiomodModelOut, 
                             models.chosen = mods,
                             fixed.var = 'median')
       
@@ -135,11 +138,14 @@ for(c in 1:length(ignitionContent)){
                                         seed.val = 42)
       
       # Saving
-      save.image(file = paste0(mainDir, "correctedRun_", i, ".RData"))
+      # save.image(file = paste0(mainDir, "correctedRun_", i, ".RData"))
+      save.image(file = paste0(mainDir, "monteCarlo_", i, "_ignPct", (ignitionContent[c]*100), "_rep_", r, ".RData"))
     } # i Loop ends
     gc()
   } # r Loop ends
 } # c Loop ends
+doParallel::stopImplicitCluster()
+t_end <- Sys.time()
 # The following lines contain the same routines outside of loop===========
 # # Construct compiled responses
 # myRespXY <- subset(absencePoints, pointCateg == "absence", c(pointCateg, presAbs_BL), NSE=TRUE) 
