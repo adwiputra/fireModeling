@@ -8,16 +8,16 @@ library(terra)
 library(biomod2)
 
 # Documenting time start
-t_start <- Sys.time()
+# t_start <- Sys.time()
 # INPUTS======
 # mainDir <- "D:/AD/fire_analysis/biomodRun_ebro/"
-setwd("/hpctmp")
-mainDir <- "/home/svu/e0915700/inputs/"
+# setwd("/hpctmp//hpctmp/e0915700/")
+mainDir <- "inputs/"
 firePoints <- paste0(mainDir, "ignitionSpread_machLearn_input.shp") %>% vect()
 absencePoints_dir <- paste0(mainDir, "basSampled_absences/")
 absencePoints <- paste0(absencePoints_dir, "bas_sample1.shp") %>% vect()
 predictorDir <- paste0(mainDir, "na_synced_covariates_v2/")
-coreNumber <- detectCores() - 8 # original 19
+coreNumber <- detectCores() - 3 # original 19
 # the ignition to total input ratio
 ignitionContent <- c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9) # 1 has been run a priori 
 N_input <- 75424 # fixed
@@ -39,7 +39,7 @@ myExpl[[2]] <- terra::as.factor(myExpl[[2]])
 # Registering do parallel backend
 registerDoParallel(cores = coreNumber) # cores = 10 crashed the whole computer
 # LOOP PER ignitionContent
-for(c in 2:length(ignitionContent)){#ADcheck
+for(c in 1:length(ignitionContent)){#ADcheck
   # LOOP PER MONTE CARLO SIMULATION
   for(r in 1:n_replications){
     # setting seed to maintain reproducibility
@@ -97,7 +97,7 @@ for(c in 2:length(ignitionContent)){#ADcheck
                                            resp.xy = myRespXY,
                                            resp.name = myRespName,
                                            filter.raster = TRUE)
-      myBiomodData
+      # myBiomodData
       # plot(myBiomodData)
       
       # explicitly define categorical variables as categorical.
@@ -133,19 +133,19 @@ for(c in 2:length(ignitionContent)){#ADcheck
       myBiomodProj <- BIOMOD_Projection(bm.mod = myBiomodModelOut,
                                         proj.name = paste0("ignitionPct", (ignitionContent[c]*100), "_absenceSet_", i, "_sim_", r),
                                         new.env = myExpl,
-                                        models.chosen = 'wildfire2015_ignitionPct', (ignitionContent[c]*100), '_allRun_RFd', # allRun refers to the fact that the selected model is the one that uses all data
+                                        models.chosen = "wildfire2015_allData_allRun_RFd", # allRun refers to the fact that the selected model is the one that uses all data
                                         nb.cpu = coreNumber,
                                         seed.val = 42)
       
       # Saving
       # save.image(file = paste0(mainDir, "correctedRun_", i, ".RData"))
-      save.image(file = paste0(mainDir, "monteCarlo_", i, "_ignPct", (ignitionContent[c]*100), "_rep_", r, ".RData"))
+      save.image(file = paste0("monteCarlo_", i, "_ignPct", (ignitionContent[c]*100), "_rep_", r, ".RData"))#mainDir, omitted for running at HPC
     } # i Loop ends
     gc()
   } # r Loop ends
 } # c Loop ends
 doParallel::stopImplicitCluster()
-t_end <- Sys.time()
+# t_end <- Sys.time()
 # The following lines contain the same routines outside of loop===========
 # # Construct compiled responses
 # myRespXY <- subset(absencePoints, pointCateg == "absence", c(pointCateg, presAbs_BL), NSE=TRUE) 
