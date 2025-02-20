@@ -12,7 +12,8 @@ library(biomod2)
 # INPUTS======
 # mainDir <- "D:/AD/fire_analysis/biomodRun_ebro/"
 # setwd("/hpctmp//hpctmp/e0915700/")
-mainDir <- "inputs/"
+# mainDir <- "inputs/" #ADtemp
+mainDir <- "D:/Documents/research/projects/nus07_fire/analysis/finalized_materials/"
 firePoints <- paste0(mainDir, "ignitionSpread_machLearn_input.shp") %>% vect()
 absencePoints_dir <- paste0(mainDir, "basSampled_absences/")
 absencePoints <- paste0(absencePoints_dir, "bas_sample1.shp") %>% vect()
@@ -52,10 +53,10 @@ registerDoParallel(cores = coreNumber) # cores = 10 crashed the whole computer
       values(absencePoints) <- values(absencePoints) %>% mutate(presAbs_BL = 0) %>% mutate(pointCateg = "absence")
       # Construct compiled responses
       myRespXY <- subset(absencePoints, pointCateg == "absence", c(pointCateg, presAbs_BL), NSE=TRUE)
-      myRespXY <- subset(firePoints, pointCateg != "absence", c(pointCateg, presAbs_BL), NSE=TRUE) %>% rbind(myRespXY)
+      myRespXY <- subset(firePoints, pointCateg == "ignition", c(pointCateg, presAbs_BL), NSE=TRUE) %>% rbind(myRespXY)
       # myRespXY <- subset(firePoints, pointCateg == "ignition", c(pointCateg, presAbs_BL), NSE=TRUE) %>% rbind(myRespXY) # this line is used instead of the above line when loop is run outside the C loop
       # Extracting the boolean presence (1) / absence (0) values
-      myResp <- values(myRespXY) %>% mutate(presAbs_BL = as.factor(presAbs_BL)) %>% select(presAbs_BL) %>% pull()
+      myResp <- values(myRespXY) %>% select(presAbs_BL) %>% pull() # %>% mutate(presAbs_BL = as.factor(presAbs_BL))
       # Extract coordinates
       myRespXY <- myRespXY %>% terra::geom(df = TRUE) %>% select(x, y)
       # # Running the example codes from biomod2: https://biomodhub.github.io/biomod2/articles/examples_1_mainFunctions.html
