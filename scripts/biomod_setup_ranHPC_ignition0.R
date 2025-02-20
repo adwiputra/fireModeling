@@ -160,12 +160,12 @@ c = 1
       
       
       # Retreiving the projection map
-      myBiomodProj <- BIOMOD_Projection(bm.mod = myBiomodModelOut,
-                                        proj.name = paste0("ignitionPct", (ignitionContent[c]*100), "_absenceSet_", i, "_sim_", r),
-                                        new.env = myExpl,
-                                        models.chosen = "wildfire2015_allData_allRun_RFd", # allRun refers to the fact that the selected model is the one that uses all data
-                                        nb.cpu = coreNumber,
-                                        seed.val = 42)
+      # myBiomodProj <- BIOMOD_Projection(bm.mod = myBiomodModelOut,
+      #                                   proj.name = paste0("ignitionPct", (ignitionContent[c]*100), "_absenceSet_", i, "_sim_", r),
+      #                                   new.env = myExpl,
+      #                                   models.chosen = "wildfire2015_allData_allRun_RFd", # allRun refers to the fact that the selected model is the one that uses all data
+      #                                   nb.cpu = coreNumber,
+      #                                   seed.val = 42)
       
       # Saving
       # save.image(file = paste0(mainDir, "correctedRun_", i, ".RData"))
