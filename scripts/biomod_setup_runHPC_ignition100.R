@@ -14,6 +14,7 @@ library(biomod2)
 # setwd("/hpctmp//hpctmp/e0915700/")
 mainDir <- "inputs/"
 # mainDir <- "D:/Documents/research/projects/nus07_fire/analysis/finalized_materials/"
+
 firePoints <- paste0(mainDir, "ignitionSpread_machLearn_input.shp") %>% vect()
 absencePoints_dir <- paste0(mainDir, "basSampled_absences/")
 absencePoints <- paste0(absencePoints_dir, "bas_sample1.shp") %>% vect()
