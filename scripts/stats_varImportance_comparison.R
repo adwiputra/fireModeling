@@ -74,4 +74,48 @@ summary(lmer_water)
 anova(lmer_water)
 
 # Positive fixed effect means that the 100% ignition run has higher varImp for the predictor in focus and vice versa.
-# B. T-TEST
+
+# 4. PLOTTING======
+# generate 8 box plots, each depicting the variable importance values with 0 or 100 ignition
+par(mfrow = c(2, 4))
+# 1. VPD
+ggplot(vpd_df, aes(x= ignitionPercent, y=var.imp)) +
+  geom_boxplot(fill='#A4A4A4', color="black")+ ylab(element_blank()) + xlab(element_blank()) +
+  ggtitle("VPD") + theme_classic() + theme(plot.title = element_text(hjust=0.5))
+# 2. Elevation
+ggplot(dem_df, aes(x= ignitionPercent, y=var.imp)) +
+  geom_boxplot(fill='#A4A4A4', color="black")+ ylab(element_blank()) + xlab(element_blank()) +
+  ggtitle("Elevation") + theme_classic() + theme(plot.title = element_text(hjust=0.5))
+# 3. Land cover diversity
+ggplot(h_df, aes(x= ignitionPercent, y=var.imp)) +
+  geom_boxplot(fill='#A4A4A4', color="black")+ ylab(element_blank()) + xlab(element_blank()) +
+  ggtitle("Land cover diversity") + theme_classic() + theme(plot.title = element_text(hjust=0.5))
+# 4. Dominant land cover
+ggplot(domLandCover_df, aes(x= ignitionPercent, y=var.imp)) +
+  geom_boxplot(fill='#A4A4A4', color="black")+ ylab(element_blank()) + xlab(element_blank()) +
+  ggtitle("Dominant land cover") + theme_classic() + theme(plot.title = element_text(hjust=0.5))
+# 5. Ecoregion
+ggplot(ecoregion_df, aes(x= ignitionPercent, y=var.imp)) +
+  geom_boxplot(fill='#A4A4A4', color="black")+ ylab(element_blank()) + xlab(element_blank()) +
+  ggtitle("Ecoregion") + theme_classic() + theme(plot.title = element_text(hjust=0.5))
+# 6. Human footprint
+ggplot(human_df, aes(x= ignitionPercent, y=var.imp)) +
+  geom_boxplot(fill='#A4A4A4', color="black")+ ylab(element_blank()) + xlab(element_blank()) +
+  ggtitle("Human footprint") + theme_classic() + theme(plot.title = element_text(hjust=0.5))
+# 7. Travel time to nearest city
+ggplot(travel_df, aes(x= ignitionPercent, y=var.imp)) +
+  geom_boxplot(fill='#A4A4A4', color="black")+ ylab(element_blank()) + xlab(element_blank()) +
+  ggtitle("Travel time to the nearest city") + theme_classic() + theme(plot.title = element_text(hjust=0.5))
+# 8. Distance to water# 2. Elevation
+ggplot(water_df, aes(x= ignitionPercent, y=var.imp)) +
+  geom_boxplot(fill='#A4A4A4', color="black")+ ylab(element_blank()) + xlab(element_blank()) +
+  ggtitle("Distance to water") + theme_classic() + theme(plot.title = element_text(hjust=0.5))
+
+
+
+# An alternative using facet.wrap
+combined_varImportance %>% mutate(ignitionPercent = as.factor(ignitionPercent)) %>%
+  # pivot_longer(everything()) %>%
+  ggplot(aes(x = ignitionPercent, y = var.imp, group = )) + 
+  geom_boxplot(fill='#A4A4A4', color="black") +
+  facet_grid(~ expl.var) + facet_wrap( ~ expl.var, nrow = 2) + theme_gray()

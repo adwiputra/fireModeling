@@ -17,6 +17,18 @@ firePoints <- paste0(mainDir, "ignitionSpread_machLearn_input.shp") %>% vect()
 absencePoints_dir <- paste0(mainDir, "basSampled_absences/")
 absencePoints <- paste0(absencePoints_dir, "bas_sample1.shp") %>% vect()
 predictorDir <- paste0(mainDir, "na_synced_covariates_v2/")
+
+# Setting up the biomod2 parameters
+user.RFd <- list("for_all_datasets" = list(
+  type = "classification",
+  ntree = 1000,
+  mtry = 2,
+  strata = factor(c(0, 1)),
+  sampsize = NULL,
+  nodesize = 10,
+  maxnodes = NULL
+))
+
 # coreNumber <- detectCores() - 3 # original 19
 # coreNumber <- detectCores() - 5 # Run on parallel24 with 2 nodes (48) to address memory exceeded issue
 coreNumber <- detectCores() - 10
@@ -110,16 +122,31 @@ c = 1
       # Processing======
       # Run the model
       myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
-                                          modeling.id = paste0('sensitivity_', c, '_abs_', i, '_sim_', r),
+                                          # modeling.id = paste0('sensitivity_', c, '_abs_', i, '_sim_', r),
+                                          modeling.id = paste0('ADmod_fullIgnition_abs_', i),
                                           models = c('RFd'),
                                           CV.strategy = 'random',
                                           CV.nb.rep = 10, # set to 10 in non-monte carlo runs
                                           CV.perc = 0.7,
-                                          OPT.strategy = 'bigboss',
+                                          # OPT.strategy = 'bigboss',
+                                          OPT.strategy = 'user.defined',
+                                          OPT.user.val = user.RFd,
                                           metric.eval = c('TSS', 'ROC'),
                                           var.import = 3,
                                           seed.val = 42,
                                           nb.cpu = coreNumber)
+      # Run the model with default 'bigboss' setting
+      # myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
+      #                                     modeling.id = paste0('sensitivity_', c, '_abs_', i, '_sim_', r),
+      #                                     models = c('RFd'),
+      #                                     CV.strategy = 'random',
+      #                                     CV.nb.rep = 10, # set to 10 in non-monte carlo runs
+      #                                     CV.perc = 0.7,
+      #                                     OPT.strategy = 'bigboss',
+      #                                     metric.eval = c('TSS', 'ROC'),
+      #                                     var.import = 3,
+      #                                     seed.val = 42,
+      #                                     nb.cpu = coreNumber)
       # Obtain evaluation scores
       evaluationScores <- get_evaluations(myBiomodModelOut)
       # Extracting variable importance
