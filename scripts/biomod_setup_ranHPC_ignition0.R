@@ -38,7 +38,9 @@ N_input <- 75424 # fixed
 # total replicates of monte carlo simulation
 n_replications <- 100
 # seed_r <- sample(1:1000, n_replications) # the seed number for each monte carlo simulation # Below is the sample obtained after running this line
-seed_r <- c(766,165,638,185,777,301,424,622,291,35,844,59,772,477,203,616,223,566,737,588,389,482,288,155,693,919,836,119,140,582,605,700,415,92,195,77,339,830,875,104,618,285,943,188,870,947,136,126,915,816,760,392,565,36,597,287,639,435,751,379,992,669,702,133,955,445,167,289,937,172,885,784,214,430,538,450,271,204,382,732,715,745,37,121,954,685,799,441,684,779,143,196,135,858,753,624,89,307,572,173)
+majorSeed <- Sys.Date() %>% as.character() %>% parse(text = .) %>% eval()
+set.seed(majorSeed)
+seed_r <- sample(1:1000000, size = n_replications*10) # 10 is the number of absence set, hardcoded
 # coreNumber <- 30-19
 # Preprocessing=======
 # Synchronize the coordinate reference systems
@@ -57,27 +59,28 @@ registerDoParallel(cores = coreNumber) # cores = 10 crashed the whole computer
 c = 1
   # LOOP PER MONTE CARLO SIMULATION
   for(r in 1:n_replications){
-    # setting seed to maintain reproducibility
-    set.seed(seed_r[r])
-    # Preprocessing points data: assigning random numbers (ranNum) to the firePoints for sampling
-    values(firePoints) <- values(firePoints) %>% mutate(presAbs_BL = 1) %>% mutate(ranNum = runif(nrow(firePoints), 0, 100000))
-    firePoints <- firePoints %>% terra::sort(v = "ranNum") 
-    # Sample the firePoints according to the ignitionContent
-    n_ignition <- ignitionContent[c] * N_input
-    n_ignition <- round(n_ignition)
-    # generate a logical vector that matches the n_ignition
-    n_ignition <- rep(TRUE, times = n_ignition) %>% c(rep(FALSE, times = N_input - n_ignition))
-    # extract the ignitionPoints from firePoints according to n_ignition
-    ignitionSample <- subset(firePoints, pointCateg == "ignition", c(pointCateg, presAbs_BL, ranNum), NSE = TRUE)
-    ignitionSample <- subset(ignitionSample, n_ignition, c(pointCateg, presAbs_BL), NSE = TRUE)
-    # extract the spreadPoints from firePoints according to N_input - n_ignition
-    spreadSample <- subset(firePoints, pointCateg == "spread", c(pointCateg, presAbs_BL, ranNum), NSE = TRUE)
-    n_spread <- rep(TRUE, times = N_input - length(ignitionSample)) %>% c(rep(FALSE, times = nrow(spreadSample) - N_input + length(ignitionSample)))
-    spreadSample <- terra::subset(spreadSample, n_spread, c(pointCateg, presAbs_BL), NSE = TRUE)
-    # merge spreadSample with ignitionSample
-    presencePoints <- ignitionSample %>% rbind(spreadSample)
     # LOOP PER ABSENCE POINT SET
     for(i in 1:10){
+      # setting seed to maintain reproducibility
+      seed_id <- (r-1)*10 + i
+      set.seed(seed_r[seed_id])
+      # Preprocessing points data: assigning random numbers (ranNum) to the firePoints for sampling
+      values(firePoints) <- values(firePoints) %>% mutate(presAbs_BL = 1) %>% mutate(ranNum = runif(nrow(firePoints), 0, 100000))
+      firePoints <- firePoints %>% terra::sort(v = "ranNum") 
+      # Sample the firePoints according to the ignitionContent
+      n_ignition <- ignitionContent[c] * N_input
+      n_ignition <- round(n_ignition)
+      # generate a logical vector that matches the n_ignition
+      n_ignition <- rep(TRUE, times = n_ignition) %>% c(rep(FALSE, times = N_input - n_ignition))
+      # extract the ignitionPoints from firePoints according to n_ignition
+      ignitionSample <- subset(firePoints, pointCateg == "ignition", c(pointCateg, presAbs_BL, ranNum), NSE = TRUE)
+      ignitionSample <- subset(ignitionSample, n_ignition, c(pointCateg, presAbs_BL), NSE = TRUE)
+      # extract the spreadPoints from firePoints according to N_input - n_ignition
+      spreadSample <- subset(firePoints, pointCateg == "spread", c(pointCateg, presAbs_BL, ranNum), NSE = TRUE)
+      n_spread <- rep(TRUE, times = N_input - length(ignitionSample)) %>% c(rep(FALSE, times = nrow(spreadSample) - N_input + length(ignitionSample)))
+      spreadSample <- terra::subset(spreadSample, n_spread, c(pointCateg, presAbs_BL), NSE = TRUE)
+      # merge spreadSample with ignitionSample
+      presencePoints <- ignitionSample %>% rbind(spreadSample)
       # load the specified absence points
       absencePoints <- paste0(absencePoints_dir, "bas_sample", i, ".shp") %>% vect()
       values(absencePoints) <- values(absencePoints) %>% mutate(presAbs_BL = 0) %>% mutate(pointCateg = "absence")
