@@ -21,17 +21,19 @@ absencePoints <- paste0(absencePoints_dir, "bas_sample1.shp") %>% vect()
 predictorDir <- paste0(mainDir, "na_synced_covariates_v2/")
 
 # Setting up the biomod2 parameters
-user.RFd <- list("for_all_datasets" = list(
-  type = "classification",
-  ntree = 1000,
-  mtry = 2,
-  strata = factor(c(0, 1)),
-  sampsize = NULL,
-  nodesize = 10,
-  maxnodes = NULL
-))
+user.RFd <- list("RFd.binary.randomForest.randomForest" = list(
+  "for_all_datasets" = list(
+    type = "classification",
+    ntree = 1000,
+    mtry = 2,
+    strata = factor(c(0, 1)),
+    sampsize = NULL,
+    nodesize = 10,
+    maxnodes = NULL
+  )))
+
 # coreNumber <- detectCores() - 3 # original 19
-coreNumber <- detectCores() - 10 # Run on parallel24 with 2 nodes (48) to address memory exceeded issue
+coreNumber <- detectCores() - 22 # Run on parallel24 with 2 nodes (48) to address memory exceeded issue
 
 # Preprocessing=======
 # Synchronize the coordinate reference systems

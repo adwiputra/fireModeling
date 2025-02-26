@@ -17,7 +17,7 @@ firePoints <- paste0(mainDir, "ignitionSpread_machLearn_input.shp") %>% vect()
 absencePoints_dir <- paste0(mainDir, "basSampled_absences/")
 absencePoints <- paste0(absencePoints_dir, "bas_sample1.shp") %>% vect()
 predictorDir <- paste0(mainDir, "na_synced_covariates_v2/")
-
+modify_rfParameters <- FALSE
 # Setting up the biomod2 parameters
 user.RFd <- list("RFd.binary.randomForest.randomForest" = list(
   "for_all_datasets" = list(
@@ -126,21 +126,36 @@ c = 1
       
       # Processing======
       # Run the model
-      myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
-                                          # modeling.id = paste0('sensitivity_', c, '_abs_', i, '_sim_', r),
-                                          modeling.id = paste0('ADmod_fullIgnition_abs_', i),
-                                          models = c('RFd'),
-                                          CV.strategy = 'random',
-                                          CV.nb.rep = 10, # set to 10 in non-monte carlo runs
-                                          CV.perc = 0.7,
-                                          # OPT.strategy = 'bigboss',
-                                          OPT.strategy = 'user.defined',
-                                          OPT.user.val = user.RFd,
-                                          metric.eval = c('TSS', 'ROC'),
-                                          var.import = 3,
-                                          seed.val = 42,
-                                          nb.cpu = coreNumber)
-      # Run the model with default 'bigboss' setting
+      if(modify_rfParameters){
+        myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
+                                            # modeling.id = paste0('sensitivity_', c, '_abs_', i, '_sim_', r),
+                                            modeling.id = paste0('ADmod_fullIgnition_abs_', i),
+                                            models = c('RFd'),
+                                            CV.strategy = 'random',
+                                            CV.nb.rep = 10, # set to 10 in non-monte carlo runs
+                                            CV.perc = 0.7,
+                                            # OPT.strategy = 'bigboss',
+                                            OPT.strategy = 'user.defined',
+                                            OPT.user.val = user.RFd,
+                                            metric.eval = c('TSS', 'ROC'),
+                                            var.import = 3,
+                                            seed.val = 42,
+                                            nb.cpu = coreNumber)
+      } else{
+        myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
+                                            # modeling.id = paste0('sensitivity_', c, '_abs_', i, '_sim_', r),
+                                            modeling.id = paste0('ADmod_fullIgnition_abs_', i),
+                                            models = c('RFd'),
+                                            CV.strategy = 'random',
+                                            CV.nb.rep = 10, # set to 10 in non-monte carlo runs
+                                            CV.perc = 0.7,
+                                            OPT.strategy = 'bigboss',
+                                            metric.eval = c('TSS', 'ROC'),
+                                            var.import = 3,
+                                            seed.val = 42,
+                                            nb.cpu = coreNumber)
+      }
+        # Run the model with default 'bigboss' setting
       # myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
       #                                     modeling.id = paste0('sensitivity_', c, '_abs_', i, '_sim_', r),
       #                                     models = c('RFd'),
@@ -174,7 +189,7 @@ c = 1
       
       # Saving
       # save.image(file = paste0(mainDir, "correctedRun_", i, ".RData"))
-      save.image(file = paste0("monteCarlo_", i, "_ignPct", (ignitionContent[c]*100), "_rep_", r, ".RData"))#mainDir, omitted for running at HPC
+      save.image(file = paste0("monteCarlo_", i, "_ignPct", (ignitionContent[c]*100), "_rep_", r, "_nTree500.RData"))#mainDir, omitted for running at HPC
     } # i Loop ends
     gc()
   } # r Loop ends

@@ -127,7 +127,7 @@ ignitionSpread_df <- attribute_allPoints %>% select(-pointCategory) %>% right_jo
 ignitionSpread_summary_df <- data.frame(n_ignitions = n_ignitions_graph, n_spread = n_spreads_graph, graph_id = retained_fireGraph_IDs)
 # save all results
 save.image(paste0(output_dir, "final_graphAnalysis.RData"))
-
+fwrite(ignitionSpread_summary_df, file = paste0(output_dir, "ignitionSpread_summary.csv"))
 # Enforce coordinate uniqueness
 # check if all coordinates are exclusive
 if(identical(nrow(ignitionSpread_df), nrow(unique(ignitionSpread_df[, c("LONGITUDE", "LATITUDE")])))) {
