@@ -189,7 +189,9 @@ c = 1
       
       # Saving
       # save.image(file = paste0(mainDir, "correctedRun_", i, ".RData"))
-      save.image(file = paste0("monteCarlo_", i, "_ignPct", (ignitionContent[c]*100), "_rep_", r, "_nTree500.RData"))#mainDir, omitted for running at HPC
+      if(modify_rfParameters) save.image(file = paste0("monteCarlo_", i, "_ignPct", (ignitionContent[c]*100), "_rep_", r, ".RData")) else{
+        save.image(file = paste0("monteCarlo_", i, "_ignPct", (ignitionContent[c]*100), "_rep_", r, "_nTree500.RData"))
+      }#mainDir, omitted for running at HPC
     } # i Loop ends
     gc()
   } # r Loop ends
