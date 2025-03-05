@@ -11,8 +11,8 @@ library(data.table)
 
 # 2. INPUTS=====
 outputDir <- "D:/Documents/research/projects/nus07_fire/analysis/output/"
-rData_dir <- "D:/Documents/research/projects/nus07_fire/analysis/output/hpcRun/"
-summarized <- FALSE # should the three permutations outcome be averaged?
+rData_dir <- "D:/Documents/research/projects/nus07_fire/analysis/output/hpcRun/finalized_randomForest/nTree500_ignition0_run/"
+summarized <- TRUE # should the three permutations outcome be averaged?
 # 3. PREPROCESSING======
 ignitionPct <- 0
 absenceSets <- 10
@@ -30,9 +30,9 @@ for(a in 1:absenceSets){
   # Loop monteCarloRuns
   # for(m in 1:5){#ADtemp
   for(m in 1:monteCarloRuns){
-    # m <- 1
+    # m <- 1 monteCarlo_1_ignPct0_rep_1_nTree500
     # a. load RData
-    select_rData <- rData_files %>% grep(paste0("monteCarlo_", a, "_ignPct", ig, "_rep_", m, ".RData"), ., value = TRUE)
+    select_rData <- rData_files %>% grep(paste0("monteCarlo_", a, "_ignPct", ig, "_rep_", m, "_nTree500.RData"), ., value = TRUE)
     load(select_rData)
     print(paste0("Successfully loaded a ", a, " m ", m))
     if(summarized) variable_importance <- variable_importance %>% filter(run == "allRun") %>% group_by(expl.var, run) %>% summarize(var.imp = mean(var.imp)) %>% ungroup() else{

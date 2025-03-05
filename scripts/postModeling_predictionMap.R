@@ -1,5 +1,5 @@
-# Calculate average VPD until 2014
-# 15/01/2025
+# Calculate median fireOriginLikelihood
+# 26/02/2025
 # AD
 
 # 1. libraries====
@@ -8,6 +8,8 @@ library(tidyverse)
 
 # 2. inputs=====
 rData_dir_nTree500 <- "D:/Documents/research/projects/nus07_fire/analysis/output/falconRun/wildfire2015/"
+# Both outputs are identical
+# rData_dir_nTree500 <- "D:/Documents/research/projects/nus07_fire/analysis/output/hpcRun/finalized_randomForest/nTree500_ignition100_run/wildfire.bigBoss/"
 outputDir <- "D:/Documents/research/projects/nus07_fire/analysis/output/"
 # monthlyVPD_dir <- "G:/chelsav2/GLOBAL/monthly/vpd/"
 # referenceRaster <- rast("D:/Documents/otherOpps/YSSP/projects/analysis/fireModeling/data_etc/NAsynced_reference.tif")

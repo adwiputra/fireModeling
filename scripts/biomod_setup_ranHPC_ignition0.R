@@ -98,7 +98,7 @@ c = 1
       # data("DataSpecies")
       # head(DataSpecies)
       # # Selecting the name of the species in foci
-      myRespName <- 'wildfire2015'
+      if(modify_rfParameters) myRespName <- 'wildfire2015' else myRespName <- 'wildfire2015_bigBoss'
       # 
       # # Retreive corresponding presence/absence data
       # myResp <- as.numeric(DataSpecies[, myRespName])

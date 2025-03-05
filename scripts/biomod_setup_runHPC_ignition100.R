@@ -19,7 +19,7 @@ firePoints <- paste0(mainDir, "ignitionSpread_machLearn_input.shp") %>% vect()
 absencePoints_dir <- paste0(mainDir, "basSampled_absences/")
 absencePoints <- paste0(absencePoints_dir, "bas_sample1.shp") %>% vect()
 predictorDir <- paste0(mainDir, "na_synced_covariates_v2/")
-
+modify_rfParameters <- FALSE
 # Setting up the biomod2 parameters
 user.RFd <- list("RFd.binary.randomForest.randomForest" = list(
   "for_all_datasets" = list(
@@ -33,7 +33,7 @@ user.RFd <- list("RFd.binary.randomForest.randomForest" = list(
   )))
 
 # coreNumber <- detectCores() - 3 # original 19
-coreNumber <- detectCores() - 22 # Run on parallel24 with 2 nodes (48) to address memory exceeded issue
+coreNumber <- detectCores() - 6 # Run on parallel24 with 2 nodes (48) to address memory exceeded issue
 
 # Preprocessing=======
 # Synchronize the coordinate reference systems
@@ -66,7 +66,7 @@ registerDoParallel(cores = coreNumber) # cores = 10 crashed the whole computer
       # data("DataSpecies")
       # head(DataSpecies)
       # # Selecting the name of the species in foci
-      myRespName <- 'wildfire'
+      if(modify_rfParameters) myRespName <- 'wildfire' else myRespName <- 'wildfire_bigBoss'
       # 
       # # Retreive corresponding presence/absence data
       # myResp <- as.numeric(DataSpecies[, myRespName])
@@ -94,6 +94,7 @@ registerDoParallel(cores = coreNumber) # cores = 10 crashed the whole computer
       
       # Processing======
       # Run the model
+      if(modify_rfParameters){
       myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
                                           # modeling.id = paste0('sensitivity_', c, '_abs_', i, '_sim_', r),
                                           modeling.id = paste0('ADmod_fullIgnition_abs_', i),
@@ -108,6 +109,22 @@ registerDoParallel(cores = coreNumber) # cores = 10 crashed the whole computer
                                           var.import = 3,
                                           seed.val = 42,
                                           nb.cpu = coreNumber)
+      } else{
+        myBiomodModelOut <- BIOMOD_Modeling(bm.format = myBiomodData,
+                                            # modeling.id = paste0('sensitivity_', c, '_abs_', i, '_sim_', r),
+                                            modeling.id = paste0('bigBoss_fullIgnition_abs_', i),
+                                            models = c('RFd'),
+                                            CV.strategy = 'random',
+                                            CV.nb.rep = 10, # set to 10 in non-monte carlo runs
+                                            CV.perc = 0.7,
+                                            OPT.strategy = 'bigboss',
+                                            # OPT.strategy = 'user.defined',
+                                            # OPT.user.val = user.RFd,
+                                            metric.eval = c('TSS', 'ROC'),
+                                            var.import = 3,
+                                            seed.val = 42,
+                                            nb.cpu = coreNumber)
+      }
       # Obtain evaluation scores
       evaluationScores <- get_evaluations(myBiomodModelOut)
       # Extracting variable importance
@@ -121,16 +138,21 @@ registerDoParallel(cores = coreNumber) # cores = 10 crashed the whole computer
       
       
       # Retreiving the projection map
+      # Specifying the chosen model
+      chosen.model_name <- paste0(myRespName, "_allData_allRun_RFd")
+      if(!modify_rfParameters) chosen.model_name <- chosen.model_name %>% gsub("_bigBoss", ".bigBoss", .)
       myBiomodProj <- BIOMOD_Projection(bm.mod = myBiomodModelOut,
                                         proj.name = paste0("ADmod_ignitionPct100_absenceSet_", i),
                                         new.env = myExpl,
-                                        models.chosen = "wildfire_allData_allRun_RFd", # allRun refers to the fact that the selected model is the one that uses all data
+                                        models.chosen = chosen.model_name, # allRun refers to the fact that the selected model is the one that uses all data
                                         nb.cpu = coreNumber,
                                         seed.val = 42)
       
       # Saving
       # save.image(file = paste0(mainDir, "correctedRun_", i, ".RData"))
-      save.image(file = paste0("ADmod_ignitionPct100_absenceSet", i, ".RData"))#mainDir, omitted for running at HPC
+      if(modify_rfParameters) save.image(file = paste0("ADmod_ignitionPct100_absenceSet", i, ".RData")) else{
+        save.image(file = paste0("bigBoss_ignitionPct100_absenceSet", i, ".RData"))
+      }#mainDir, omitted for running at HPC
       gc()
     } # i Loop ends
 

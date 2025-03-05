@@ -11,8 +11,9 @@ library(data.table)
 
 # 2. INPUTS=====
 outputDir <- "D:/Documents/research/projects/nus07_fire/analysis/output/"
-rData_dir <- "D:/Documents/research/projects/nus07_fire/analysis/output/falconRun/wildfire2015/"
-summarized <- FALSE # should the three permutations outcome be averaged?
+# rData_dir <- "D:/Documents/research/projects/nus07_fire/analysis/output/falconRun/wildfire2015/"
+rData_dir <- "D:/Documents/research/projects/nus07_fire/analysis/output/hpcRun/finalized_randomForest/nTree500_ignition100_run/"
+summarized <- TRUE # should the three permutations outcome be averaged?
 # 3. PREPROCESSING======
 ignitionPct <- 100
 absenceSets <- 10
@@ -26,16 +27,17 @@ ig <- ignitionPct # i was taken by another variable stored in RData
 # for(a in 1:3){#ADtemp
 for(a in 1:absenceSets){
     # a. load RData
-    select_rData <- rData_files %>% grep(paste0("correctedRun_", a, ".RData"), ., value = TRUE)
-    load(select_rData)
-    print(paste0("Successfully loaded a ", a, " ignition percent ", ig))
-    # b. Manipulate data.frame and summarize
-    if(summarized) variable_importance <- variable_importance %>% filter(run == "allRun") %>% group_by(expl.var, run) %>% summarize(var.imp = mean(var.imp)) %>% ungroup() else{
-      variable_importance <- variable_importance %>% filter(run == "allRun")
-    }
-    variable_importance <- variable_importance %>% mutate(absenceSet = a) %>% mutate(ignitionPercent = ig) %>% mutate(monteCarloRun = 0)
-    variableImportance_compile <- variableImportance_compile %>% bind_rows(variable_importance)
-    gc()
+    # select_rData <- rData_files %>% grep(paste0("correctedRun_", a, ".RData"), ., value = TRUE)
+  select_rData <- rData_files %>% grep(paste0("bigBoss_ignitionPct100_absenceSet", a, ".RData"), ., value = TRUE)
+  load(select_rData)
+  print(paste0("Successfully loaded a ", a, " ignition percent ", ig))
+  # b. Manipulate data.frame and summarize
+  if(summarized) variable_importance <- variable_importance %>% filter(run == "allRun") %>% group_by(expl.var, run) %>% summarize(var.imp = mean(var.imp)) %>% ungroup() else{
+    variable_importance <- variable_importance %>% filter(run == "allRun")
+  }
+  variable_importance <- variable_importance %>% mutate(absenceSet = a) %>% mutate(ignitionPercent = ig) %>% mutate(monteCarloRun = 0)
+  variableImportance_compile <- variableImportance_compile %>% bind_rows(variable_importance)
+  gc()
 }
 # 5. EXPORT======
 if(summarized) fwrite(variableImportance_compile, paste0(outputDir, "summarizedVariableImportance_monteCarlo_ignitionPercent_", ig, ".csv")) else{
