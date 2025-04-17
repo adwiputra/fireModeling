@@ -12,7 +12,125 @@ library(data.table)
 
 # 2. INPUTS=====
 inputDir <- "D:/Documents/research/projects/nus07_fire/analysis/output/"
-responseCurves_compile_nTree500 <- fread(paste0(inputDir, "responseCurves_ignitionPercent_100_nTree500.csv"))
+responseCurves_compile_nTree500 <- fread(paste0(inputDir, "medianResponseCurves_ignitionPercent_100_nTree500.csv"))
+landCover_lookup <- read.csv("F:/temp_donotDelete/finalized_materials/landCover_lookup.csv")
+ecoregion_lookup <- read.csv("F:/temp_donotDelete/finalized_materials/ecoregion_lookup.csv")#ADhere
+
+
+# ADtemp=======
+# Import landCover raster
+landCover_raster <- rast("F:/temp_donotDelete/finalized_materials/na_synced_covariates_v2/originalValues_factor/dominantLandCover.tif") %>% terra::as.factor()
+# Import ecoregion raster
+ecoregion_raster <- rast("F:/temp_donotDelete/finalized_materials/na_synced_covariates_v2/Ecoregion_v2.tif") %>% terra::as.factor()
+# ADtemp----
+
+# PREDICTORS
+predictors <- c("vpd", "DEM", "H", "gridcode", "ecoregion", "human", "travel", "water")
+# 2. PREPROCESSING=======
+# A. SEPARATE FOR EACH VARIABLE ANALYZED
+vpd_df <- responseCurves_compile_nTree500 %>% filter(grepl(predictors[1], expl.name)) 
+dem_df <- responseCurves_compile_nTree500 %>% filter(grepl(predictors[2], expl.name)) 
+h_df <- responseCurves_compile_nTree500 %>% filter(grepl(predictors[3], expl.name)) 
+domLandCover_df <- responseCurves_compile_nTree500 %>% filter(grepl(predictors[4], expl.name)) 
+ecoregion_df <- responseCurves_compile_nTree500 %>% filter(grepl(predictors[5], expl.name))
+human_df <- responseCurves_compile_nTree500 %>% filter(grepl(predictors[6], expl.name)) 
+travel_df <- responseCurves_compile_nTree500 %>% filter(grepl(predictors[7], expl.name)) 
+water_df <- responseCurves_compile_nTree500 %>% filter(grepl(predictors[8], expl.name)) 
+# B. Join categorical variables df with the corresponding lookup tables
+# b1. domLandCover
+landCover_lookup <- landCover_lookup %>% arrange(expl.val)
+lookup_toJoin <- landCover_lookup %>% mutate(expl.val.fact = levels(as.factor(as.character(landCover_lookup$expl.val))))
+domLandCover_df <- domLandCover_df %>% left_join(lookup_toJoin, by = "expl.val")
+# domLandCover_df <- domLandCover_df %>% mutate(expl.val.fact = as.factor(as.character(expl.val))) %>% left_join(lookup_toJoin, by = "expl.val.fact")
+# b2. ecoregion
+ecoregion_lookup <- ecoregion_lookup %>% arrange(expl.val)
+lookup_toJoin <- ecoregion_lookup %>% mutate(expl.val.fact = levels(as.factor(as.character(ecoregion_lookup$expl.val))))
+ecoregion_df <- ecoregion_df %>% left_join(lookup_toJoin, by = "expl.val")
+# ecoregion_df <- ecoregion_df %>% mutate(expl.val.fact = as.factor(as.character(expl.val))) %>% left_join(lookup_toJoin, by = "expl.val.fact")
+# 3. PROCESSING======
+# 4. PLOTTING======
+# generate 8 box plots, each depicting the variable importance values with 0 or 100 ignition
+# par(mfrow = c(2, 4))
+# 1. VPD
+png(file = paste0(inputDir, "plots/figure4_vpd.png"), width=1300, height = 1280, units = "px")
+ggplot(vpd_df, aes(x=expl.val*0.01, y=pred.val)) + # 0.1 is the scaling factor; however the values would only make sense if it is interpreted directly as Pa before multiplied by scaling factor.
+  geom_point(alpha=0.06, size=7) +   geom_smooth(fill="#FFFF43") +   labs(y="", x = "VPD (hPa)") + theme_classic() +
+  theme(axis.title=element_text(size=66), axis.text=element_text(size=45))
+dev.off()
+# 2. Elevation
+png(file = paste0(inputDir, "plots/figure4_elevation.png"), width=1300, height = 1280, units = "px")
+ggplot(dem_df, aes(x=expl.val, y=pred.val)) +
+  geom_point(alpha=0.06, size=7) +   geom_smooth(fill="#FFFF43") +   labs(y="", x = "Elevation (m)") + theme_classic() +
+  theme(axis.title=element_text(size=66), axis.text=element_text(size=45))
+dev.off()
+# 3. Land cover diversity
+png(file = paste0(inputDir, "plots/figure4_landCovH.png"), width=1300, height = 1280, units = "px")
+ggplot(h_df, aes(x=expl.val, y=pred.val)) +
+  geom_point(alpha=0.06, size=7) +   geom_smooth(fill="#FFFF43") +   labs(y="", x = "Land cover diversity index") + theme_classic() +
+  theme(axis.title=element_text(size=66), axis.text=element_text(size=45))
+dev.off()
+
+# 6. Human footprint
+png(file = paste0(inputDir, "plots/figure4_humanFootprint.png"), width=1300, height = 1280, units = "px")
+ggplot(human_df, aes(x=expl.val, y=pred.val)) +
+  geom_point(alpha=0.06, size=7) +   geom_smooth(fill="#FFFF43") +   labs(y="", x = "Human footprint index") + theme_classic() +
+  theme(axis.title=element_text(size=66), axis.text=element_text(size=45))
+dev.off()
+# 7. Travel time to nearest city
+png(file = paste0(inputDir, "plots/figure4_travel.png"), width=1300, height = 1280, units = "px")
+ggplot(travel_df, aes(x=expl.val, y=pred.val)) +
+  geom_point(alpha=0.06, size=7) +   geom_smooth(fill="#FFFF43") +   labs(y="", x = "Travel time to the nearest city (minutes)") + theme_classic() +
+  theme(axis.title=element_text(size=66), axis.text=element_text(size=45))
+dev.off()
+# 8. Distance to water
+png(file = paste0(inputDir, "plots/figure4_water.png"), width=1300, height = 1280, units = "px")
+ggplot(water_df, aes(x=expl.val*0.001, y=pred.val)) +
+  geom_point(alpha=0.06, size=7) +   geom_smooth(fill="#FFFF43") +   labs(y="", x = "Distance to water (km)") + theme_classic() +
+  theme(axis.title=element_text(size=66), axis.text=element_text(size=45))
+dev.off()
+
+# Categorical response curves=====
+# 4. Dominant land cover
+# a. summarize the values per ecoregion types
+summarized_fireIgnitionResponse <- domLandCover_df %>% group_by(landClass) %>% summarize(meanResp = mean(pred.val), standDev = sd(pred.val)) %>% ungroup()
+# Removing trailing double space
+summarized_fireIgnitionResponse <- summarized_fireIgnitionResponse %>% mutate(landClass = gsub("  ", " ", landClass))
+# 3. PLOTTING=========
+# a. Bar plot with standard deviation; adopted with modification from https://r-graph-gallery.com/4-barplot-with-error-bar.html 
+png(file = paste0(inputDir, "plots/figure4_landCovDominant_bar.png"), width=2100, height = 1280, units = "px")
+ggplot(summarized_fireIgnitionResponse) +
+  geom_bar( aes(y=reorder(landClass, meanResp), x=meanResp), stat="identity", fill="gray", alpha=0.7) +
+  geom_errorbar(aes(y=reorder(landClass, meanResp), xmin=meanResp-standDev, xmax=meanResp+standDev), width=0.5, colour="black", alpha=0.9, linewidth=0.8) +
+  ylab("Dominant land cover class") + xlab(element_blank()) + theme_minimal() +
+  theme(axis.title=element_text(size=66), axis.text=element_text(size=45))
+dev.off()
+# 
+png(file = paste0(inputDir, "plots/figure4_landCovDominant.png"), width=2100, height = 1280, units = "px")
+ggplot(domLandCover_df, aes(x=pred.val, y=landClass)) +
+  geom_point() +   labs(y="", x = "Predictor value") +
+  ggtitle("Dominant land cover") + theme_classic() +
+  theme(axis.title=element_text(size=66), axis.text=element_text(size=45))
+dev.off()
+# 5. Ecoregion
+summarized_fireIgnitionResponse <- ecoregion_df %>% group_by(newECONAME) %>% summarize(meanResp = mean(pred.val), standDev = sd(pred.val)) %>% ungroup()
+# 3. PLOTTING=========
+# a. Bar plot with standard deviation; adopted with modification from https://r-graph-gallery.com/4-barplot-with-error-bar.html 
+png(file = paste0(inputDir, "plots/figure4_ecoregion_bar.png"), width=2100, height = 1350, units = "px")
+ggplot(summarized_fireIgnitionResponse) +
+  geom_bar( aes(y=reorder(newECONAME, meanResp), x=meanResp), stat="identity", fill="gray", alpha=0.7) +
+  geom_errorbar(aes(y=reorder(newECONAME, meanResp), xmin=meanResp-standDev, xmax=meanResp+standDev), width=0.5, colour="black", alpha=0.9, linewidth=0.8) +
+  ylab("Ecoregion") + xlab(element_blank()) + theme_minimal() +
+  theme(axis.title=element_text(size=66), axis.text=element_text(size=30))
+dev.off()
+# 
+png(file = paste0(inputDir, "plots/figure4_ecoregion.png"), width=2100, height = 1280, units = "px")
+ggplot(ecoregion_df, aes(x=pred.val, y=newECONAME)) +
+  geom_point() +   labs(y="", x = "Predictor value") +
+  ggtitle("Ecoregion") + theme_classic() +
+  theme(axis.title=element_text(size=66), axis.text=element_text(size=45))
+dev.off()
+
+
 landCoverDir <- "F:/temp_donotDelete/data/spatial/covariates/landCover_CCI/"
 categoricalVariables <- c("gridcode", "reduced_ecoregion_raster")
 landCover_freq <- "F:/temp_donotDelete/finalized_materials/na_synced_covariates_v2/dominantLandCover.tif" %>% rast() %>% as.factor() %>% freq()
@@ -71,128 +189,10 @@ for(a in 1:absenceSets){
 fwrite(responseCurves_compile_nTree500, paste0(outputDir, "responseCurves_ignitionPercent_", ig, "_nTree500.csv"))
 
 
-
-
-# Below this is copied from the variable importance statistics=======
-# Stats to check the difference between 0 % and 100 % ignition
-# first written 17 February 2025
-# AD
-
-# 0. LIBRARIES====
-library(lme4)
-library(lmerTest)
-library(ggplot2)
-library(data.table)
-library(tidyverse)
-
-# 1. INPUTS=====
-inputDir <- "D:/Documents/research/projects/nus07_fire/analysis/output/"
-allIgnition_varImportance <- fread(paste0(inputDir, "variableImportance_monteCarlo_ignitionPercent_100.csv"))
-noIgnition_varImportance <- fread(paste0(inputDir, "variableImportance_monteCarlo_ignitionPercent_0.csv"))
-
-# PREDICTORS
-predictors <- c("vpd", "DEM", "H", "gridcode", "ecoregion", "human", "travel", "water")
-# 2. PREPROCESSING=======
-# A. BIND DATA FRAMES
-combined_varImportance <- allIgnition_varImportance %>% bind_rows(noIgnition_varImportance)
-
-# B. SEPARATE FOR EACH VARIABLE ANALYZED
-vpd_df <- combined_varImportance %>% filter(grepl(predictors[1], expl.var)) %>% mutate(ignitionPercent = as.factor(ignitionPercent))
-dem_df <- combined_varImportance %>% filter(grepl(predictors[2], expl.var)) %>% mutate(ignitionPercent = as.factor(ignitionPercent))
-h_df <- combined_varImportance %>% filter(grepl(predictors[3], expl.var)) %>% mutate(ignitionPercent = as.factor(ignitionPercent))
-domLandCover_df <- combined_varImportance %>% filter(grepl(predictors[4], expl.var)) %>% mutate(ignitionPercent = as.factor(ignitionPercent))
-ecoregion_df <- combined_varImportance %>% filter(grepl(predictors[5], expl.var)) %>% mutate(ignitionPercent = as.factor(ignitionPercent))
-human_df <- combined_varImportance %>% filter(grepl(predictors[6], expl.var)) %>% mutate(ignitionPercent = as.factor(ignitionPercent))
-travel_df <- combined_varImportance %>% filter(grepl(predictors[7], expl.var)) %>% mutate(ignitionPercent = as.factor(ignitionPercent))
-water_df <- combined_varImportance %>% filter(grepl(predictors[8], expl.var)) %>% mutate(ignitionPercent = as.factor(ignitionPercent))
-# 3. PROCESSING======
-# A. LMER
-# A1. VPD
-lmer_vpd <- lmer(var.imp ~ ignitionPercent + (1|absenceSet), data = vpd_df)#,      
-# control=lmerControl(check.nobs.vs.nlev = "ignore",
-#                     check.nobs.vs.nRE  = "ignore"))
-summary(lmer_vpd)
-anova(lmer_vpd)
-
-# A2. DEM
-lmer_dem <- lmer(var.imp ~ ignitionPercent + (1|absenceSet), data = dem_df)
-summary(lmer_dem)
-anova(lmer_dem)
-
-# A3. landCover diversity (H)
-lmer_h <- lmer(var.imp ~ ignitionPercent + (1|absenceSet), data = h_df)
-summary(lmer_h)
-anova(lmer_h)
-
-# A4. dominant land cover
-lmer_domLandCover <- lmer(var.imp ~ ignitionPercent + (1|absenceSet), data = domLandCover_df)
-summary(lmer_domLandCover)
-anova(lmer_domLandCover)
-
-# A5. ecoregion
-lmer_ecoregion <- lmer(var.imp ~ ignitionPercent + (1|absenceSet), data = ecoregion_df)
-summary(lmer_ecoregion)
-anova(lmer_ecoregion)
-
-# A6. human footprint
-lmer_human <- lmer(var.imp ~ ignitionPercent + (1|absenceSet), data = human_df)
-summary(lmer_human)
-anova(lmer_human)
-
-# A7. travel time
-lmer_travel <- lmer(var.imp ~ ignitionPercent + (1|absenceSet), data = travel_df)
-summary(lmer_travel)
-anova(lmer_travel)
-
-# A8. distance to water
-lmer_water <- lmer(var.imp ~ ignitionPercent + (1|absenceSet), data = water_df)
-summary(lmer_water)
-anova(lmer_water)
-
-# Positive fixed effect means that the 100% ignition run has higher varImp for the predictor in focus and vice versa.
-
-# 4. PLOTTING======
-# generate 8 box plots, each depicting the variable importance values with 0 or 100 ignition
-par(mfrow = c(2, 4))
-# 1. VPD
-ggplot(vpd_df, aes(x= ignitionPercent, y=var.imp)) +
-  geom_boxplot(fill='#A4A4A4', color="black")+ ylab(element_blank()) + xlab(element_blank()) +
-  ggtitle("VPD") + theme_classic() + theme(plot.title = element_text(hjust=0.5))
-# 2. Elevation
-ggplot(dem_df, aes(x= ignitionPercent, y=var.imp)) +
-  geom_boxplot(fill='#A4A4A4', color="black")+ ylab(element_blank()) + xlab(element_blank()) +
-  ggtitle("Elevation") + theme_classic() + theme(plot.title = element_text(hjust=0.5))
-# 3. Land cover diversity
-ggplot(h_df, aes(x= ignitionPercent, y=var.imp)) +
-  geom_boxplot(fill='#A4A4A4', color="black")+ ylab(element_blank()) + xlab(element_blank()) +
-  ggtitle("Land cover diversity") + theme_classic() + theme(plot.title = element_text(hjust=0.5))
-# 4. Dominant land cover
-ggplot(domLandCover_df, aes(x= ignitionPercent, y=var.imp)) +
-  geom_boxplot(fill='#A4A4A4', color="black")+ ylab(element_blank()) + xlab(element_blank()) +
-  ggtitle("Dominant land cover") + theme_classic() + theme(plot.title = element_text(hjust=0.5))
-# 5. Ecoregion
-ggplot(ecoregion_df, aes(x= ignitionPercent, y=var.imp)) +
-  geom_boxplot(fill='#A4A4A4', color="black")+ ylab(element_blank()) + xlab(element_blank()) +
-  ggtitle("Ecoregion") + theme_classic() + theme(plot.title = element_text(hjust=0.5))
-# 6. Human footprint
-ggplot(human_df, aes(x= ignitionPercent, y=var.imp)) +
-  geom_boxplot(fill='#A4A4A4', color="black")+ ylab(element_blank()) + xlab(element_blank()) +
-  ggtitle("Human footprint") + theme_classic() + theme(plot.title = element_text(hjust=0.5))
-# 7. Travel time to nearest city
-ggplot(travel_df, aes(x= ignitionPercent, y=var.imp)) +
-  geom_boxplot(fill='#A4A4A4', color="black")+ ylab(element_blank()) + xlab(element_blank()) +
-  ggtitle("Travel time to the nearest city") + theme_classic() + theme(plot.title = element_text(hjust=0.5))
-# 8. Distance to water# 2. Elevation
-ggplot(water_df, aes(x= ignitionPercent, y=var.imp)) +
-  geom_boxplot(fill='#A4A4A4', color="black")+ ylab(element_blank()) + xlab(element_blank()) +
-  ggtitle("Distance to water") + theme_classic() + theme(plot.title = element_text(hjust=0.5))
-
-
-
-# An alternative using facet.wrap
-combined_varImportance %>% mutate(ignitionPercent = as.factor(ignitionPercent)) %>%
-  # pivot_longer(everything()) %>%
-  ggplot(aes(x = ignitionPercent, y = var.imp, group = )) + 
-  geom_boxplot(fill='#A4A4A4', color="black") +
-  facet_grid(~ expl.var) + facet_wrap( ~ expl.var, nrow = 2) + theme_gray()
-
+# Loess line plotting template
+# Create scatterplot with loess curve
+# ggplot(economics, aes(x = date, y = unemploy)) +
+#   geom_point(alpha=0.06, size=7) +
+#   geom_smooth(fill="#FFFF43") +
+#   labs(y="", y = "Predictor value") +
+#   ggtitle("USA - Unemployed People (1967-2015)")

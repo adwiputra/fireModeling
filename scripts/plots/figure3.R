@@ -36,14 +36,16 @@ summarized_varImportance <- allIgnition_varImportance %>% group_by(expl.var) %>%
 summarized_varImportance <- summarized_varImportance %>% arrange(-meanVarImp) %>% mutate(displayedName = c("Ecoregion", "VPD", "Dominant
 Land Cover", "Elevation", "Travel Time to
 the Nearest City",
-                                                                                                           "Human Footprint
-Index", "Land Cover
-Diversity", "Distance to Water"))
+                                                                                                           "Human
+Footprint Index", "Land Cover
+Diversity", "Distance to
+Water"))
 
 # 3. PLOTTING=========
 # a. Bar plot with standard deviation; adopted with modification from https://r-graph-gallery.com/4-barplot-with-error-bar.html 
+png(file = paste0(inputDir, "plots/figure3_varImportance.png"), width=1950, height = 1280, units = "px")
 ggplot(summarized_varImportance) +
   geom_bar( aes(x=reorder(displayedName, -meanVarImp), y=meanVarImp), stat="identity", fill="skyblue", alpha=0.7) +
   geom_errorbar(aes(x=reorder(displayedName, -meanVarImp), ymin=meanVarImp-standDev, ymax=meanVarImp+standDev), width=0.5, colour="black", alpha=0.9, linewidth=0.8) + theme_minimal() +
-  ylab("Permutation importance") + xlab(element_blank())
-
+  ylab("Permutation importance") + xlab(element_blank()) + theme(axis.title=element_text(size=66), axis.text=element_text(size=32))
+dev.off()

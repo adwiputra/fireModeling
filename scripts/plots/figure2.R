@@ -4,10 +4,12 @@
 library(tidyverse)
 library(data.table)
 library(terra)
-
+library(ggpointdensity)
+library(viridis)
 # 1. INPUTS=====
 inputDir <- "D:/Documents/research/projects/nus07_fire/analysis/output/"
-inputDir_vector <- "D:/Documents/research/projects/nus07_fire/analysis/finalized_materials/"
+# inputDir_vector <- "D:/Documents/research/projects/nus07_fire/analysis/finalized_materials/"
+inputDir_vector <- "F:/temp_donotDelete/finalized_materials/"
 ignitionSpread_pointSummary <- fread(paste0(inputDir, "ignitionSpread_summary.csv"))
 convexHull_polygon <- vect(paste0(inputDir_vector, "convexHull_final2015fireNetwork.shp")) %>% values()
 
@@ -33,17 +35,22 @@ ignitionArea_summary <- convexHull_polygon %>% rename(graph_id = id) %>% left_jo
 # a. Scatter plot for ignition / spread with loess line adopted with modification from: https://ademos.people.uic.edu/Chapter10.html
 scatter_ignitionSpread = ggplot(data = ignitionSpread_pointSummary, aes(x = n_ignitions, y = n_spread))+
   geom_point(alpha = 0.08)+
-  geom_smooth(color='black')+
+  # geom_smooth(color='black')+
   theme_bw()+
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+  
   xlab("Number of origin points")+ylab("Number of spread points") #+
   # scale_x_continuous(breaks = seq(0, 50, 5))+
   # scale_y_continuous(breaks = seq(50, 90, 5))
-
+# pointDensity_ignitionSpread = ggplot(data = ignitionSpread_pointSummary, aes(x = n_ignitions, y = n_spread))+
+#   geom_pointdensity() +
+#   scale_colour_viridis_c(breaks = c(100, 500, 1500, 2500, 5000, 10000)) +
+#   theme_bw() +
+#   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+  
+#   xlab("Number of origin points")+ylab("Number of spread points") #+
 # b. Scatter plot for ignition / convexHull area with loess line adopted with modification from: https://ademos.people.uic.edu/Chapter10.html
 scatter_ignitionConvHull = ggplot(data = ignitionArea_summary, aes(x = n_ignitions, y = km_area))+
   geom_point(alpha = 0.08)+
-  geom_smooth(color='black')+
+  # geom_smooth(color='black')+
   theme_bw()+
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+  
   xlab("Number of origin points")+ylab("Area of convex hull (square km)") 

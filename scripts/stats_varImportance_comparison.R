@@ -11,24 +11,33 @@ library(tidyverse)
 
 # 1. INPUTS=====
 inputDir <- "D:/Documents/research/projects/nus07_fire/analysis/output/"
-allIgnition_varImportance <- fread(paste0(inputDir, "variableImportance_monteCarlo_ignitionPercent_100.csv"))
-noIgnition_varImportance <- fread(paste0(inputDir, "variableImportance_monteCarlo_ignitionPercent_0.csv"))
+allIgnition_varImportance <- fread(paste0(inputDir, "summarizedVariableImportance_monteCarlo_ignitionPercent_100.csv"))
+noIgnition_varImportance <- fread(paste0(inputDir, "summarizedVariableImportance_monteCarlo_ignitionPercent_0.csv"))
 
 # PREDICTORS
 predictors <- c("vpd", "DEM", "H", "gridcode", "ecoregion", "human", "travel", "water")
 # 2. PREPROCESSING=======
 # A. BIND DATA FRAMES
-combined_varImportance <- allIgnition_varImportance %>% bind_rows(noIgnition_varImportance)
+combined_varImportance <- allIgnition_varImportance %>% bind_rows(noIgnition_varImportance) %>% mutate(expl.var = case_when(grepl("vpd", expl.var) ~ "VPD",
+                                                                                                                            grepl("DEM", expl.var) ~ "Elevation",
+                                                                                                                            grepl("H", expl.var) ~ "Land cover diversity",
+                                                                                                                            grepl("gridcode", expl.var) ~ "Dominant land cover",
+                                                                                                                            grepl("ecoregion", expl.var) ~ "Ecoregion",
+                                                                                                                            grepl("human", expl.var) ~ "Human footprint",
+                                                                                                                            grepl("travel", expl.var) ~ "Travel time to the nearest city",
+                                                                                                                            grepl("water", expl.var) ~ "Distance to water bodies",
+                                                                                                                            TRUE ~ expl.var
+                                                                                                                            ))
 
 # B. SEPARATE FOR EACH VARIABLE ANALYZED
-vpd_df <- combined_varImportance %>% filter(grepl(predictors[1], expl.var)) %>% mutate(ignitionPercent = as.factor(ignitionPercent))
-dem_df <- combined_varImportance %>% filter(grepl(predictors[2], expl.var)) %>% mutate(ignitionPercent = as.factor(ignitionPercent))
-h_df <- combined_varImportance %>% filter(grepl(predictors[3], expl.var)) %>% mutate(ignitionPercent = as.factor(ignitionPercent))
-domLandCover_df <- combined_varImportance %>% filter(grepl(predictors[4], expl.var)) %>% mutate(ignitionPercent = as.factor(ignitionPercent))
-ecoregion_df <- combined_varImportance %>% filter(grepl(predictors[5], expl.var)) %>% mutate(ignitionPercent = as.factor(ignitionPercent))
-human_df <- combined_varImportance %>% filter(grepl(predictors[6], expl.var)) %>% mutate(ignitionPercent = as.factor(ignitionPercent))
-travel_df <- combined_varImportance %>% filter(grepl(predictors[7], expl.var)) %>% mutate(ignitionPercent = as.factor(ignitionPercent))
-water_df <- combined_varImportance %>% filter(grepl(predictors[8], expl.var)) %>% mutate(ignitionPercent = as.factor(ignitionPercent))
+vpd_df <- combined_varImportance %>% filter(grepl("VPD", expl.var)) %>% mutate(ignitionPercent = as.factor(ignitionPercent)) %>% mutate(expl.var = "VPD")
+dem_df <- combined_varImportance %>% filter(grepl("Elevation", expl.var)) %>% mutate(ignitionPercent = as.factor(ignitionPercent)) %>% mutate(expl.var = "Elevation")
+h_df <- combined_varImportance %>% filter(grepl(predictors[3], expl.var)) %>% mutate(ignitionPercent = as.factor(ignitionPercent)) %>% mutate(expl.var = "Land cover diversity")
+domLandCover_df <- combined_varImportance %>% filter(grepl("Dominant land cover", expl.var)) %>% mutate(ignitionPercent = as.factor(ignitionPercent)) %>% mutate(expl.var = "Dominant land cover")
+ecoregion_df <- combined_varImportance %>% filter(grepl("Ecoregion", expl.var)) %>% mutate(ignitionPercent = as.factor(ignitionPercent)) %>% mutate(expl.var = "Ecoregion")
+human_df <- combined_varImportance %>% filter(grepl("Human footprint", expl.var)) %>% mutate(ignitionPercent = as.factor(ignitionPercent)) %>% mutate(expl.var = "Human footprint")
+travel_df <- combined_varImportance %>% filter(grepl("Travel time to the nearest city", expl.var)) %>% mutate(ignitionPercent = as.factor(ignitionPercent)) %>% mutate(expl.var = "Travel time to city")
+water_df <- combined_varImportance %>% filter(grepl(predictors[8], expl.var)) %>% mutate(ignitionPercent = as.factor(ignitionPercent)) %>% mutate(expl.var = "Distance to water bodies")
 # 3. PROCESSING======
 # A. LMER
 # A1. VPD
@@ -118,4 +127,4 @@ combined_varImportance %>% mutate(ignitionPercent = as.factor(ignitionPercent)) 
   # pivot_longer(everything()) %>%
   ggplot(aes(x = ignitionPercent, y = var.imp, group = )) + 
   geom_boxplot(fill='#A4A4A4', color="black") +
-  facet_grid(~ expl.var) + facet_wrap( ~ expl.var, nrow = 2) + theme_gray()
+  facet_grid(~ factor(expl.var, levels = c("Ecoregion", "VPD", "Elevation", "Distance to water bodies", "Dominant land cover", "Human footprint", "Land cover diversity", "Travel time to the nearest city"))) + facet_wrap( ~ factor(expl.var, levels = c("Ecoregion", "VPD", "Elevation", "Distance to water bodies", "Dominant land cover", "Human footprint", "Land cover diversity", "Travel time to the nearest city")), nrow = 2) + theme_gray() + ylab("Variable importance") + xlab("Origin points input content (%)")
