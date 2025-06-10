@@ -22,8 +22,8 @@ lc2014_raster <- "D:/Documents/otherOpps/YSSP/projects/analysis/data/spatial/cov
 output_dir <- "D:/Documents/research/projects/nus07_fire/analysis/finalized_materials/"
 
 # 2. FUNCTIONS========
-# a. A function to filter decomposed graph according to the date(s) of the ignition points
-graph_temporalFilter <- function(in_graph = fireGraph_decompose, temporal_threshold = as.POSIXct("2016/01/01", format = "%Y/%m/%d", tz = "UTC"), before = TRUE){
+# a. A function to filter decomposed graph according to the date(s) of the ignition points # revised 10/06/2025
+graph_temporalFilter <- function(in_graph = fireGraph_decompose){
   ignitionPoints_graphs <- in_graph %>% sapply(function(grph) V(grph)[degree(grph, v = V(grph), mode = "in") == 0])
   n_ignitions_graph <- lapply(X = ignitionPoints_graphs, length) %>% unlist()
   ignitionPoints_id_unlist <- ignitionPoints_graphs %>% unlist() %>% names() %>% as.numeric()
@@ -31,8 +31,11 @@ graph_temporalFilter <- function(in_graph = fireGraph_decompose, temporal_thresh
   ignitions_df <- data.frame(ignition_pointID = ignitionPoints_id_unlist, graph_id = rep(1:length(in_graph), n_ignitions_graph))
   # join with 'attribute_allPoints'
   ignitions_df <- attribute_allPoints %>% rename_at(1, ~"ignition_pointID") %>% select(ignition_pointID, ACQ_DATE) %>% right_join(ignitions_df) %>% arrange(graph_id)
+  ignitions_df <- ignitions_df %>% group_by(graph_id) %>% summarise(earliest_origin = min(ACQ_DATE), last_origin = max(ACQ_DATE))
   # filter based on date
-  if(before) graph_id_toKeep <- ignitions_df %>% filter(ACQ_DATE < temporal_threshold) %>% select(graph_id) %>% unique() %>% pull() else graph_id_toKeep <- ignitions_df %>% filter(ACQ_DATE >= temporal_threshold) %>% select(graph_id) %>% unique() %>% pull()
+  graph_id_toKeep <- ignitions_df %>% filter(earliest_origin >= as.POSIXct("2015/01/01", format = "%Y/%m/%d", tz = "UTC") & last_origin < as.POSIXct("2016/01/01", format = "%Y/%m/%d", tz = "UTC")) %>% select(graph_id) %>% unique() %>% pull()
+  # if(before) graph_id_toKeep <- ignitions_df %>% filter(ACQ_DATE < temporal_threshold) %>% select(graph_id) %>% unique() %>% pull() else graph_id_toKeep <- ignitions_df %>% filter(ACQ_DATE >= temporal_threshold) %>% select(graph_id) %>% unique() %>% pull()
+  
   # subset input graph
   return(in_graph[graph_id_toKeep]) # return graph
 }
@@ -58,10 +61,9 @@ fireGraph = graph_from_data_frame(nonWaterIntersecting_nearTable[, c("IN_FID", "
 # b. decompose the graph collection while removing isolate vertices
 fireGraph_decompose <- fireGraph %>% decompose(min.vertices = 3) # 3 original; 2 is sufficient to remove isolates, but produce too many small graphs
 verticesCounts <- sapply(fireGraph_decompose, vcount)# can also use function(grph) V(grph) %>% length())
-# c. filter decomposed graph according to the ignition point dates
-fireGraph_decompose <- graph_temporalFilter(fireGraph_decompose, temporal_threshold = as.POSIXct("2016/01/01", format = "%Y/%m/%d", tz = "UTC"))
-# apply filtering to omit fire graph that occurred in 2014
-fireGraph_decompose <- graph_temporalFilter(fireGraph_decompose, temporal_threshold = as.POSIXct("2015/01/01", format = "%Y/%m/%d", tz = "UTC"), before = FALSE)
+# c. filter decomposed graph according to the ignition point dates; omitting graphs with origin points occurring not in 2015.
+# The temporal thresholds were hardcoded in the function.
+fireGraph_decompose <- graph_temporalFilter(fireGraph_decompose)
 # d. convex hull generation, apply filtering again
 # scripts for this section was taken from 'plot_convHull_network.R'=======
 # First network as 'blanko'
@@ -102,7 +104,6 @@ retained_fireGraph_IDs <- urbanBarrenProp_table_nCells %>% filter(denom > 4) %>%
 # 5. Export retained convHull
 retained_fireGraph_convHull <- large_fireGraph_convHull[retained_fireGraph_IDs]
 retained_fireGraph_convHull %>% writeVector(paste0(output_dir, "convexHull_final2015fireNetwork.shp"))
-# ADhere
 # d. identify ignition and spread points
 # Filter the final graph subset
 # filter the nearTable based on the retained_fireGraph_IDs
