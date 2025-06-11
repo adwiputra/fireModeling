@@ -11,29 +11,50 @@ library(tidyverse)
 
 
 # 1. INPUTS=====
+
 # a. Load all output from 'plot_convHull_network.R'
-load("D:/Documents/research/projects/nus07_fire/analysis/finalized_materials/partB_waterFiltering_2025.RData")
-# b. Load output from 'filter_traverSea_subset.R'
+results_previousStep <- "E:/temp_transfer/finalized_materials/partB_waterFiltering_2025.RData"
+load(results_previousStep)
+# b. Setting up output_dir to be relative
+output_dir <- paste0(dirname(results_previousStep), "/")
+# c. Load output from 'filter_traverSea_subset.R'
 waterChecked_nearTable <- paste0(output_dir, "fromTejo_transfer/waterChecked_mergeParts_nearTable_w84.rds") %>% readRDS()
-attribute_allPoints <- read_rds("D:/Documents/research/projects/nus07_fire/analysis/finalized_materials/pointAttributes_all.rds")
-# c. 2014 land cover
-lc2014_raster <- "D:/Documents/otherOpps/YSSP/projects/analysis/data/spatial/covariates/landCover_CCI/ESACCI-LC-L4-LCCS-Map-300m-P1Y-2014-v2.0.7.tif" %>% rast()
-# d. Define output_dir
-output_dir <- "D:/Documents/research/projects/nus07_fire/analysis/finalized_materials/"
+attribute_allPoints <- read_rds(paste0(output_dir, "pointAttributes_all.rds"))
+# d. 2014 land cover
+lc2014_raster <- "E:/storage/YSSP_covariates/landCover_CCI/ESACCI-LC-L4-LCCS-Map-300m-P1Y-2014-v2.0.7.tif" %>% rast()
+
 
 # 2. FUNCTIONS========
 # a. A function to filter decomposed graph according to the date(s) of the ignition points # revised 10/06/2025
-graph_temporalFilter <- function(in_graph = fireGraph_decompose){
+graph_temporalFilter <- function(in_graph = fireGraph_decompose, graph_lifeTime_threshold = 5*30*24*3600){ # 5 months is the current lifeTime threshold
   ignitionPoints_graphs <- in_graph %>% sapply(function(grph) V(grph)[degree(grph, v = V(grph), mode = "in") == 0])
   n_ignitions_graph <- lapply(X = ignitionPoints_graphs, length) %>% unlist()
   ignitionPoints_id_unlist <- ignitionPoints_graphs %>% unlist() %>% names() %>% as.numeric()
+  # Implement something similar as above to spreadPoints
+  spreadPoints_graphs <- in_graph %>% sapply(function(grph) V(grph)[degree(grph, v = V(grph), mode = "in") > 0])
+  n_spreads_graph <- lapply(X = spreadPoints_graphs, length) %>% unlist()
+  spreadPoints_id_unlist <- spreadPoints_graphs %>% unlist() %>% names() %>% as.numeric()
   # Generate data.frame
   ignitions_df <- data.frame(ignition_pointID = ignitionPoints_id_unlist, graph_id = rep(1:length(in_graph), n_ignitions_graph))
   # join with 'attribute_allPoints'
   ignitions_df <- attribute_allPoints %>% rename_at(1, ~"ignition_pointID") %>% select(ignition_pointID, ACQ_DATE) %>% right_join(ignitions_df) %>% arrange(graph_id)
-  ignitions_df <- ignitions_df %>% group_by(graph_id) %>% summarise(earliest_origin = min(ACQ_DATE), last_origin = max(ACQ_DATE))
+  ignitions_df <- ignitions_df %>% group_by(graph_id) %>% summarise(earliest_origin = min(ACQ_DATE), last_origin = max(ACQ_DATE)) %>% ungroup()
+  # Generate data.frame for spread points
+  spreads_df <- data.frame(spread_pointID = spreadPoints_id_unlist, graph_id = rep(1:length(in_graph), n_spreads_graph))
+  # join with 'attribute_allPoints'
+  spreads_df <- attribute_allPoints %>% rename_at(1, ~"spread_pointID") %>% select(spread_pointID, ACQ_DATE) %>% right_join(spreads_df) %>% arrange(graph_id)
+  spreads_df <- spreads_df %>% group_by(graph_id) %>% summarise(earliest_spread = min(ACQ_DATE), last_spread = max(ACQ_DATE)) %>% ungroup()
+  # merge ignitions and spreads df
+  merged_df <- ignitions_df %>% left_join(spreads_df)
+  # apply subtraction of time to estimate the total lifetime of fire graphs
+  merged_df <- merged_df %>% mutate(graph_lifetime = last_spread - earliest_origin)
+  # Apply step by step filtering
+  # 1. filter merged_df based on the earliest_origin and the last_origin
+  filtered_df <- merged_df %>% filter(earliest_origin >= as.POSIXct("2015/01/01", format = "%Y/%m/%d", tz = "UTC") & last_origin < as.POSIXct("2016/01/01", format = "%Y/%m/%d", tz = "UTC"))
+  # 2. filter filtered_df based on the graph_lifetime
+  filtered_df <- filtered_df %>% filter(as.numeric(graph_lifetime) < graph_lifeTime_threshold) 
   # filter based on date
-  graph_id_toKeep <- ignitions_df %>% filter(earliest_origin >= as.POSIXct("2015/01/01", format = "%Y/%m/%d", tz = "UTC") & last_origin < as.POSIXct("2016/01/01", format = "%Y/%m/%d", tz = "UTC")) %>% select(graph_id) %>% unique() %>% pull()
+  graph_id_toKeep <- filtered_df %>% select(graph_id) %>% unique() %>% pull()
   # if(before) graph_id_toKeep <- ignitions_df %>% filter(ACQ_DATE < temporal_threshold) %>% select(graph_id) %>% unique() %>% pull() else graph_id_toKeep <- ignitions_df %>% filter(ACQ_DATE >= temporal_threshold) %>% select(graph_id) %>% unique() %>% pull()
   
   # subset input graph
@@ -88,7 +109,7 @@ gc()
 large_fireGraph_convHull <- convHull_all %>% subset(km_area >= 1, NSE = TRUE)
 # retained_fireGraph_convHull %>% writeVector("output/convexHull_filteredFireNetwork.shp", overwrite = TRUE)
 
-# b. total non-NoData cells per polygon
+# b. total non-NoData (including water) cells per polygon
 lc2014_raster <- lc2014_raster %>% crop(large_fireGraph_convHull)
 lc2014_processedRaster <- (lc2014_raster != 0) & (lc2014_raster != 210)
 denom_table_nCells <- lc2014_processedRaster %>% terra::extract(large_fireGraph_convHull, fun = sum)
@@ -99,6 +120,7 @@ numerator_table_nCells <- lc2014_processedRaster %>% terra::extract(large_fireGr
 urbanBarrenProp_table_nCells <- denom_table_nCells %>% rename_at(2, ~"denom") %>% left_join(numerator_table_nCells, by = "ID") %>% rename_at(3, ~"nume") %>%  mutate(nCell_prop = nume/denom)
 # e. Filtering
 retained_fireGraph_IDs <- urbanBarrenProp_table_nCells %>% filter(denom > 4) %>% filter(nCell_prop < 0.1) %>% select(ID) %>% pull() #ID here refers to the rowID instad of graph ID
+# nCell_prop < 0.1 filters out graphs with urban or barren area covering 10% or more of the valid land cells.
 # 0.4, 0.3333 not enough to filter out all false positives; 0.1 provides good balance (OKI is retained)
 
 # 5. Export retained convHull
@@ -131,6 +153,7 @@ save.image(paste0(output_dir, "final_graphAnalysis.RData"))
 fwrite(ignitionSpread_summary_df, file = paste0(output_dir, "ignitionSpread_summary.csv"))
 # Enforce coordinate uniqueness
 # check if all coordinates are exclusive
+# export after uniqueness has been confirmed
 if(identical(nrow(ignitionSpread_df), nrow(unique(ignitionSpread_df[, c("LONGITUDE", "LATITUDE")])))) {
   print("no duplicated point coordinates")
   # ignitionSpread_df  %>% write.csv(outputPointTable_name)
