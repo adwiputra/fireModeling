@@ -36,7 +36,7 @@ user.RFd <- list("RFd.binary.randomForest.randomForest" = list(
 coreNumber <- detectCores() - 10
 # the ignition to total input ratio
 ignitionContent <- c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9) # 1 has been run a priori 
-N_input <- 75424 # fixed
+N_input <- 74539#75424 # adjusted in revision jun 2025
 # total replicates of monte carlo simulation
 n_replications <- 100
 # seed_r <- sample(1:1000, n_replications) # the seed number for each monte carlo simulation # Below is the sample obtained after running this line
