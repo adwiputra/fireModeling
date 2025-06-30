@@ -6,7 +6,7 @@ library(data.table)
 
 # 1. INPUTS=====
 inputDir <- "D:/Documents/research/projects/nus07_fire/analysis/output/"
-allIgnition_varImportance <- fread(paste0(inputDir, "variableImportance_monteCarlo_ignitionPercent_100.csv"))
+allIgnition_varImportance <- fread(paste0(inputDir, "summarizedVariableImportance_monteCarlo_ignitionPercent_100.csv"))
 
 c25 <- c(
   "dodgerblue2", "#E31A1C", # red
@@ -43,7 +43,7 @@ Water"))
 
 # 3. PLOTTING=========
 # a. Bar plot with standard deviation; adopted with modification from https://r-graph-gallery.com/4-barplot-with-error-bar.html 
-png(file = paste0(inputDir, "plots/figure3_varImportance.png"), width=1950, height = 1280, units = "px")
+png(file = paste0(inputDir, "plots/jun2025/jun30/figure3_varImportance.png"), width=1950, height = 1280, units = "px")
 ggplot(summarized_varImportance) +
   geom_bar( aes(x=reorder(displayedName, -meanVarImp), y=meanVarImp), stat="identity", fill="skyblue", alpha=0.7) +
   geom_errorbar(aes(x=reorder(displayedName, -meanVarImp), ymin=meanVarImp-standDev, ymax=meanVarImp+standDev), width=0.5, colour="black", alpha=0.9, linewidth=0.8) + theme_minimal() +

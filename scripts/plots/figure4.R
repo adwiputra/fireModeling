@@ -47,38 +47,38 @@ ecoregion_df <- ecoregion_df %>% left_join(lookup_toJoin, by = "expl.val")
 png(file = paste0(inputDir, "plots/jun2025/jun30/figure4_vpd.png"), width=1300, height = 1280, units = "px")
 ggplot(vpd_df, aes(x=expl.val*0.01, y=pred.val)) + # 0.1 is the scaling factor; however the values would only make sense if it is interpreted directly as Pa before multiplied by scaling factor.
   geom_point(alpha=0.06, size=7) +   geom_smooth(fill="#FFFF43") +   labs(y="", x = "VPD (hPa)") + theme_classic() +
-  theme(axis.title=element_text(size=66), axis.text=element_text(size=45))
+  theme(axis.title=element_text(size=66), axis.text=element_text(size=45)) + ylim(0, 1)
 dev.off()
 # 2. Elevation
 png(file = paste0(inputDir, "plots/jun2025/jun30/figure4_elevation.png"), width=1300, height = 1280, units = "px")
 ggplot(dem_df, aes(x=expl.val, y=pred.val)) +
   geom_point(alpha=0.06, size=7) +   geom_smooth(fill="#FFFF43") +   labs(y="", x = "Elevation (m)") + theme_classic() +
-  theme(axis.title=element_text(size=66), axis.text=element_text(size=45))
+  theme(axis.title=element_text(size=66), axis.text=element_text(size=45)) + ylim(0, 1)
 dev.off()
 # 3. Land cover diversity
 png(file = paste0(inputDir, "plots/jun2025/jun30/figure4_landCovH.png"), width=1300, height = 1280, units = "px")
 ggplot(h_df, aes(x=expl.val, y=pred.val)) +
   geom_point(alpha=0.06, size=7) +   geom_smooth(fill="#FFFF43") +   labs(y="", x = "Land cover diversity index") + theme_classic() +
-  theme(axis.title=element_text(size=66), axis.text=element_text(size=45))
+  theme(axis.title=element_text(size=66), axis.text=element_text(size=45)) + ylim(0, 1)
 dev.off()
 
 # 6. Human footprint
 png(file = paste0(inputDir, "plots/jun2025/jun30/figure4_humanFootprint.png"), width=1300, height = 1280, units = "px")
 ggplot(human_df, aes(x=expl.val, y=pred.val)) +
   geom_point(alpha=0.06, size=7) +   geom_smooth(fill="#FFFF43") +   labs(y="", x = "Human footprint index") + theme_classic() +
-  theme(axis.title=element_text(size=66), axis.text=element_text(size=45))
+  theme(axis.title=element_text(size=66), axis.text=element_text(size=45)) + ylim(0, 1)
 dev.off()
 # 7. Travel time to nearest city
 png(file = paste0(inputDir, "plots/jun2025/jun30/figure4_travel.png"), width=1300, height = 1280, units = "px")
 ggplot(travel_df, aes(x=expl.val, y=pred.val)) +
   geom_point(alpha=0.06, size=7) +   geom_smooth(fill="#FFFF43") +   labs(y="", x = "Travel time to the nearest city (minutes)") + theme_classic() +
-  theme(axis.title=element_text(size=66), axis.text=element_text(size=45))
+  theme(axis.title=element_text(size=66), axis.text=element_text(size=45)) + ylim(0, 1)
 dev.off()
 # 8. Distance to water
 png(file = paste0(inputDir, "plots/jun2025/jun30/figure4_water.png"), width=1300, height = 1280, units = "px")
 ggplot(water_df, aes(x=expl.val*0.001, y=pred.val)) +
   geom_point(alpha=0.06, size=7) +   geom_smooth(fill="#FFFF43") +   labs(y="", x = "Distance to water (km)") + theme_classic() +
-  theme(axis.title=element_text(size=66), axis.text=element_text(size=45))
+  theme(axis.title=element_text(size=66), axis.text=element_text(size=45)) + ylim(0, 1)
 dev.off()
 
 # Categorical response curves=====

@@ -11,7 +11,7 @@ inputDir <- "D:/Documents/research/projects/nus07_fire/analysis/output/"
 # inputDir_vector <- "D:/Documents/research/projects/nus07_fire/analysis/finalized_materials/"
 # inputDir_vector <- "F:/temp_donotDelete/finalized_materials/"
 inputDir_vector <- "E:/temp_transfer/finalized_materials/"
-ignitionSpread_pointSummary <- fread(paste0(inputDir, "ignitionSpread_summary.csv"))
+ignitionSpread_pointSummary <- fread(paste0(inputDir_vector, "ignitionSpread_summary.csv"))
 convexHull_polygon <- vect(paste0(inputDir_vector, "convexHull_final2015fireNetwork.shp")) %>% values()
 
 
@@ -57,7 +57,7 @@ scatter_ignitionConvHull = ggplot(data = ignitionArea_summary, aes(x = log(n_ign
   xlab("log10(Number of origin points)")+ylab("log10(km Area of convex hull)")
 
 # c. Hexbin for ignition / spread
-png(file = paste0(inputDir, "plots/figure2a_hexBin.png"), width=1400, height = 1300, units = "px")
+png(file = paste0(inputDir, "plots/jun2025/jun30/figure2a_hexBin.png"), width=1400, height = 1300, units = "px")
 hexBin_ignitionSpread = ggplot(data = ignitionSpread_pointSummary, aes(x = log(n_ignitions), y = log(n_spread))) +
   geom_hex(bins = 15) + scale_fill_viridis() +
   theme_bw()+
@@ -77,7 +77,7 @@ hexBin_ignitionSpread
 #+
 dev.off()
 # d. Hexbin for ignition / spread
-png(file = paste0(inputDir, "plots/figure2b_hexBin.png"), width=1400, height = 1300, units = "px")
+png(file = paste0(inputDir, "plots/jun2025/jun30/figure2b_hexBin.png"), width=1400, height = 1300, units = "px")
 hexBin_ignitionConvHull = ggplot(data = ignitionArea_summary, aes(x = log(n_ignitions), y = log(km_area))) +
   geom_hex(bins = 15) + scale_fill_viridis() +
   theme_bw()+
