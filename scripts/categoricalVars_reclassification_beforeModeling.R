@@ -50,18 +50,20 @@ ecoregion_raster <- ecoregion_raster %>% terra::classify(reclassification_matrix
 # Export raster
 writeRaster(ecoregion_raster, "F:/storage/projects/nus07_fire/analysis/finalized_materials/na_synced_covariates_v2/Ecoregion_v2.tif")
 
-# b. Version 3=====
+# b. Version 3 25/06/2025=====
 # INPUTS=====
 # landCover_raster v2
 landCover_raster <- rast("F:/storage/projects/nus07_fire/analysis/finalized_materials/na_synced_covariates_v2/dominantLandCover_v2.tif")
 # landCover_lookup v2
 landCover_lookup <- read.csv("F:/storage/projects/nus07_fire/analysis/finalized_materials/landCover_lookup.csv") %>%
   mutate(v3.val = expl.val-1+10)
+# write.csv(landCover_lookup, "E:/temp_transfer/finalized_materials/landCover_lookup_v3.csv", row.names=FALSE)
 # ecoregion_raster v2
 ecoregion_raster <- rast("F:/storage/projects/nus07_fire/analysis/finalized_materials/na_synced_covariates_v2/Ecoregion_v2.tif")
 # ecoregion_lookup v2
 ecoregion_lookup <- read.csv("F:/storage/projects/nus07_fire/analysis/finalized_materials/ecoregion_lookup.csv") %>%
   mutate(v3.val = expl.val-1+10)
+# write.csv(ecoregion_lookup, "E:/temp_transfer/finalized_materials/ecoregion_lookup_v3.csv", row.names=FALSE)
 # reclassify landCover raster to match the v3.val as specified in landCover_lookup.
 # at this point, interpretation should be based on the expl.val which is expected
 # to be the factor level.
