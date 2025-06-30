@@ -12,7 +12,7 @@ library(data.table)
 # 2. INPUTS=====
 outputDir <- "D:/Documents/research/projects/nus07_fire/analysis/output/"
 # rData_dir <- "D:/Documents/research/projects/nus07_fire/analysis/output/falconRun/wildfire2015/"
-rData_dir <- "D:/Documents/research/projects/nus07_fire/analysis/output/hpcRun/finalized_randomForest/nTree500_ignition100_run/"
+rData_dir <- "D:/Documents/research/projects/nus07_fire/analysis/output/hpcRun/origin/reclassedCat_run/"
 summarized <- TRUE # should the three permutations outcome be averaged?
 # 3. PREPROCESSING======
 ignitionPct <- 100
