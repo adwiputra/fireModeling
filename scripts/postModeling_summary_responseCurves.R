@@ -12,12 +12,12 @@ library(data.table)
 
 # 2. INPUTS=====
 outputDir <- "D:/Documents/research/projects/nus07_fire/analysis/output/"
-# rData_dir_nTree500 <- "D:/Documents/research/projects/nus07_fire/analysis/output/hpcRun/finalized_randomForest/nTree500_ignition100_run/wildfire.bigBoss/"
-rData_dir_nTree500 <- "D:/Documents/research/projects/nus07_fire/analysis/output/falconRun/fromFalcon_mar2025/"
+rData_dir_nTree500 <- "D:/Documents/research/projects/nus07_fire/analysis/output/hpcRun/origin/reclassedCat_run/"
+# rData_dir_nTree500 <- "D:/Documents/research/projects/nus07_fire/analysis/output/falconRun/fromFalcon_mar2025/"
 # 3. PREPROCESSING======
 ignitionPct <- 100
 absenceSets <- 10
-rData_files_nTree500 <- rData_dir_nTree500 %>% dirname() %>% list.files(pattern = "RData$", full.names = TRUE, recursive = TRUE)
+rData_files_nTree500 <- rData_dir_nTree500 %>% list.files(pattern = "RData$", full.names = TRUE, recursive = TRUE) #%>% dirname()
 # rData_files_nTree1000 naming convention = "monteCarlo_absenceSets_ignPctignitionPct_rep_monteCarloRuns.RData"
 # Generate a blanko
 responseCurves_compile_nTree500 <- data.frame()
@@ -38,4 +38,4 @@ for(a in 1:absenceSets){
 }
 
 # 5. EXPORT======
-fwrite(responseCurves_compile_nTree500, paste0(outputDir, "medianResponseCurves_ignitionPercent_", ig, "_nTree500.csv"))
+fwrite(responseCurves_compile_nTree500, paste0(outputDir, "medianResponseCurves_ignitionPercent_", ig, "_nTree500_reclassed.csv"))
