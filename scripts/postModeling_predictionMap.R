@@ -7,7 +7,7 @@ library(terra)
 library(tidyverse)
 
 # 2. inputs=====
-rData_dir_nTree500 <- "D:/Documents/research/projects/nus07_fire/analysis/output/falconRun/wildfire2015/"
+rData_dir_nTree500 <- "D:/Documents/research/projects/nus07_fire/analysis/output/hpcRun/origin/reclassedCat_run/fireOrigin.bigBoss/"
 # Both outputs are identical
 # rData_dir_nTree500 <- "D:/Documents/research/projects/nus07_fire/analysis/output/hpcRun/finalized_randomForest/nTree500_ignition100_run/wildfire.bigBoss/"
 outputDir <- "D:/Documents/research/projects/nus07_fire/analysis/output/"
@@ -26,4 +26,4 @@ raster <- rast(fireOriginLikelihood_raster)
 # average all cells across the raster stack
 median_fireOriginLikelihood <- median(raster)
 # export the global data
-writeRaster(median_fireOriginLikelihood, paste0(outputDir, "median_fireOriginLikelihood_nTree500.tif"))
+writeRaster(median_fireOriginLikelihood, paste0(outputDir, "median_fireOriginLikelihood_nTree500_jun2025.tif"))

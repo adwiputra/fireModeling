@@ -11,7 +11,7 @@ library(data.table)
 
 # 2. INPUTS=====
 outputDir <- "D:/Documents/research/projects/nus07_fire/analysis/output/"
-rData_dir <- "D:/Documents/research/projects/nus07_fire/analysis/output/hpcRun/finalized_randomForest/nTree500_ignition0_run/"
+rData_dir <- "D:/Documents/research/projects/nus07_fire/analysis/output/hpcRun/spread/"
 summarized <- TRUE # should the three permutations outcome be averaged?
 # 3. PREPROCESSING======
 ignitionPct <- 0
@@ -43,7 +43,7 @@ for(a in 1:absenceSets){
     gc()
   }
 }
-print(paste0("This line is to check if error during load will halt processing")) # no, the process was not halted despite the error during the load
+# print(paste0("This line is to check if error during load will halt processing")) # no, the process was not halted despite the error during the load
 # 5. EXPORT======
 if(summarized) fwrite(variableImportance_compile, paste0(outputDir, "summarizedVariableImportance_monteCarlo_ignitionPercent_", ig, ".csv")) else{
   fwrite(variableImportance_compile, paste0(outputDir, "variableImportance_monteCarlo_ignitionPercent_", ig, ".csv"))

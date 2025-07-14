@@ -123,8 +123,12 @@ ggplot(water_df, aes(x= ignitionPercent, y=var.imp)) +
 
 
 # An alternative using facet.wrap
-combined_varImportance %>% mutate(ignitionPercent = as.factor(ignitionPercent)) %>%
-  # pivot_longer(everything()) %>%
-  ggplot(aes(x = ignitionPercent, y = var.imp, group = )) + 
-  geom_boxplot(fill='#A4A4A4', color="black") +
-  facet_grid(~ factor(expl.var, levels = c("Ecoregion", "VPD", "Elevation", "Distance to water bodies", "Dominant land cover", "Human footprint", "Land cover diversity", "Travel time to the nearest city"))) + facet_wrap( ~ factor(expl.var, levels = c("Ecoregion", "VPD", "Elevation", "Distance to water bodies", "Dominant land cover", "Human footprint", "Land cover diversity", "Travel time to the nearest city")), nrow = 2) + theme_gray() + ylab("Variable importance") + xlab("Origin points input content (%)")
+combined_varImportance <- combined_varImportance %>% mutate(plotLabel = case_when(ignitionPercent == 0 ~ "Spread",
+                                                       TRUE ~ "Origin"))
+png(file = paste0(inputDir, "plots/jun2025/jun30/figure6.png"), width=2900, height = 1480, units = "px")
+combined_varImportance %>% mutate(plotLabel = as.factor(plotLabel)) %>%  # pivot_longer(everything()) %>%
+  ggplot(aes(x = plotLabel, y = var.imp, group = )) + 
+  geom_boxplot(fill='#A4A4A4', color="black", outlier.size = 3) +
+  facet_grid(~ factor(expl.var, levels = c("Ecoregion", "VPD", "Elevation", "Distance to water bodies", "Dominant land cover", "Human footprint", "Land cover diversity", "Travel time to the nearest city"))) + facet_wrap( ~ factor(expl.var, levels = c("Ecoregion", "VPD", "Elevation", "Distance to water bodies", "Dominant land cover", "Human footprint", "Land cover diversity", "Travel time to the nearest city")), nrow = 2) + theme_gray() + ylab("Variable importance") + xlab("Input points") + theme_classic() +
+  theme(axis.title=element_text(size=60), axis.text=element_text(size=45), strip.text.x = element_text(size=38))
+dev.off()

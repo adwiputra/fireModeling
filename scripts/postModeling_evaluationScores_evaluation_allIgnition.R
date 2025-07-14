@@ -11,8 +11,8 @@ library(data.table)
 
 # 2. INPUTS=====
 outputDir <- "D:/Documents/research/projects/nus07_fire/analysis/output/"
-rData_dir_nTree1000 <- "D:/Documents/research/projects/nus07_fire/analysis/output/hpcRun/finalized_randomForest/"
-rData_dir_nTree500 <- "D:/Documents/research/projects/nus07_fire/analysis/output/falconRun/wildfire2015/"
+rData_dir_nTree1000 <- "D:/Documents/research/projects/nus07_fire/analysis/output_old/hpcRun/finalized_randomForest/"
+rData_dir_nTree500 <- "D:/Documents/research/projects/nus07_fire/analysis/output/hpcRun/origin/"
 
 # 3. PREPROCESSING======
 ignitionPct <- 100
@@ -42,7 +42,8 @@ for(a in 1:absenceSets){
 # Repeat for nTree = 500
 for(a in 1:absenceSets){
   # a. load RData
-  select_rData <- rData_files_nTree500 %>% grep(paste0("correctedRun_", a, ".RData"), ., value = TRUE)
+  # select_rData <- rData_files_nTree500 %>% grep(paste0("correctedRun_", a, ".RData"), ., value = TRUE)
+  select_rData <- rData_files_nTree500 %>% grep(paste0("absenceSet", a, ".RData"), ., value = TRUE) %>% grep(paste0("reclassedCat"), ., value = TRUE)
   load(select_rData)
   print(paste0("Successfully loaded a ", a, " ignition percent ", ig))
   # b. Manipulate data.frame and summarize
@@ -55,6 +56,11 @@ for(a in 1:absenceSets){
 # 5. EXPORT======
 fwrite(evaluationScores_compile_nTree1000, paste0(outputDir, "evaluationScores_ignitionPercent_", ig, "_nTree1000.csv"))
 fwrite(evaluationScores_compile_nTree500, paste0(outputDir, "evaluationScores_ignitionPercent_", ig, "_nTree500.csv"))
+
+# 6. Import====
+evaluationScores_compile_nTree1000 <- paste0(outputDir, "evaluationScores_ignitionPercent_", ig, "_nTree1000.csv") %>% fread()
+evaluationScores_compile_nTree500 <- paste0(outputDir, "evaluationScores_ignitionPercent_", ig, "_nTree500.csv") %>% fread()
+
 
 evaluationScores_compile_nTree1000 %>% filter(metric.eval == "TSS") %>% select(validation) %>% pull() %>% mean(na.rm = TRUE)
 evaluationScores_compile_nTree500 %>% filter(metric.eval == "TSS") %>% select(validation) %>% pull() %>% mean(na.rm = TRUE)
